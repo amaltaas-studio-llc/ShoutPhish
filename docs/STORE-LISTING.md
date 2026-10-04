@@ -113,14 +113,10 @@ release; **Public** appears in search and category pages. It can be changed late
 
 ## Test instructions tab
 
+Leave Username and Password empty. **Additional instructions** (the field holds 500 characters; this is 484):
+
 ```text
-No account is needed beyond a Gmail account. On install, a welcome page opens that explains what ShoutPhish reads; it reads nothing until "Start checking my mail" on that page is clicked, and until then the toolbar icon shows OFF. (If the page was closed, click the toolbar icon, then "See what it reads and start".)
-
-Then open any email in Gmail (mail.google.com): a badge appears beside the sender's name, and clicking it opens a card explaining the score. Ordinary mail shows Low Risk.
-
-To see a warning, send yourself a message from another Gmail account whose display name is changed to a well-known company, for example "PayPal Billing", with the text "Please verify your account" and any link. The badge shows High Risk, and the card's first finding names the mismatch between the claimed company and the actual address.
-
-The optional AI features are off by default and need no testing to use the extension. The settings page is under the toolbar icon, "Settings".
+Only a Gmail account is needed. On install, a welcome page explains what is read; click "Start checking my mail" (until then the toolbar icon shows OFF). Open any email in Gmail: a badge appears by the sender, and clicking it opens a card explaining the score. Ordinary mail is Low Risk. To see a warning, email yourself from another Gmail account with the display name "PayPal Billing" and the text "Please verify your account": it shows High Risk. AI is optional and off by default.
 ```
 
 ## Review notes
