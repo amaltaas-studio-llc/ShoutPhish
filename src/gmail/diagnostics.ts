@@ -358,7 +358,7 @@ function describeTiming(timing: AnalysisTiming | null): string {
 
 /** The browser version, without the rest of a user-agent string's fingerprinting surface. */
 export function browserVersion(userAgent: string): string {
-  return /Chrom(?:e|ium)\/[\d.]+/u.exec(userAgent)?.[0] ?? 'unknown';
+  return /(?:Chrom(?:e|ium)|Firefox)\/[\d.]+/u.exec(userAgent)?.[0] ?? 'unknown';
 }
 
 /** The whole report for the message on screen. */

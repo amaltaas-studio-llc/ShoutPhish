@@ -12,7 +12,7 @@ for.
 | --- | --- |
 | `"host_permissions": ["https://mail.google.com/*"]` | The content script reads the open message from the page in order to analyse it. This is the only origin ShoutPhish can run on. |
 | `"permissions": ["storage"]` | Persists the options-page settings (AI mode, backend URL, model server address and model name, the display toggles, whether AI runs only on flagged mail) and the trust list. No message content is ever written to storage. |
-| `"optional_host_permissions": ["http://localhost/*", "http://127.0.0.1/*", "https://*/*"]` | **Not granted at install.** If you configure your own model server, the options page requests access to that single origin on a click, and revokes it when the address changes. Chrome names the origin in the prompt. |
+| `"optional_host_permissions": ["http://localhost/*", "http://127.0.0.1/*", "https://*/*"]` | **Not granted at install.** If you configure your own model server, the options page requests access to that single origin on a click, and revokes it when the address changes. Chrome names the origin in the prompt. Firefox cannot grant one port of a named host, so for a loopback `http://` server it grants that host on every port (`http://localhost/*`); requests still go only to the configured address, because the address is read from settings and never from a message. |
 
 The HTTPS entry is a broad pattern because Chrome grants only what a pattern in the manifest covers, and a
 model server reachable over TLS can be on any host. The plaintext entries are not broad, and deliberately:

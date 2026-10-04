@@ -203,7 +203,8 @@ class OptionsPage {
     }
 
     const granted =
-      settings.modelBaseUrl !== '' && this.#grantedPattern === originPattern(settings.modelBaseUrl);
+      settings.modelBaseUrl !== '' &&
+      this.#grantedPattern === originPattern(settings.modelBaseUrl, BUILD_TARGET);
 
     this.#serverError.textContent =
       settings.modelBaseUrl === ''
@@ -241,7 +242,7 @@ class OptionsPage {
     }
 
     // Access granted to an address that is no longer configured is access nobody asked for.
-    const next = originPattern(normalized);
+    const next = originPattern(normalized, BUILD_TARGET);
     if (this.#grantedPattern !== null && this.#grantedPattern !== next) {
       await revokeOrigin(this.#grantedPattern);
       this.#grantedPattern = null;
@@ -257,7 +258,7 @@ class OptionsPage {
    * and that a failure has one obvious place to report itself.
    */
   async #connectToServer(): Promise<void> {
-    const pattern = originPattern(normalizeModelBaseUrl(this.#modelBaseUrl.value.trim()));
+    const pattern = originPattern(normalizeModelBaseUrl(this.#modelBaseUrl.value.trim()), BUILD_TARGET);
     if (pattern === null) {
       this.#serverError.textContent = 'Set a valid server address first.';
       return;
@@ -265,19 +266,20 @@ class OptionsPage {
 
     this.#connect.disabled = true;
     try {
-      // Browsers reject rather than return false for a pattern they cannot parse. Ports are fine and
-      // `[::1]` is the doubtful case, so the address is named: without this the button would appear to
-      // do nothing at all, which is the worst way for a permission step to fail. On Firefox this one
-      // prompt also asks to send message text outside the browser; see `egressPermissions`.
+      // A browser rejects, rather than returning false, for a pattern it will not grant, and its reason
+      // is shown as given: without it the button would appear to do nothing at all, which is the worst
+      // way for a permission step to fail, and any explanation written here would be a guess about
+      // which of several rules a given browser applied. On Firefox this one prompt also asks to send
+      // message text outside the browser; see `egressPermissions`.
       const granted = await chrome.permissions
         .request(egressPermissions(pattern, BUILD_TARGET))
         .catch((error: unknown) => {
           logger.debug('permission request rejected', error);
-          return null;
+          return error instanceof Error ? error.message : String(error);
         });
 
-      if (granted === null) {
-        this.#serverError.textContent = `The browser would not accept ${pattern} as an address to grant access to. Try the hostname form, for example http://127.0.0.1:11434/v1.`;
+      if (typeof granted === 'string') {
+        this.#serverError.textContent = `The browser refused to grant access to ${pattern}: ${granted}`;
         return;
       }
       if (!granted) {
@@ -292,7 +294,7 @@ class OptionsPage {
         const reason = response !== null && !response.ok ? response.error : 'no response';
         // The worker's message already names the likely cause and the setting that fixes it, so this adds
         // no advice of its own: two overlapping explanations of the same failure read as neither being sure.
-        this.#serverError.textContent = `Could not connect: ${reason}.`;
+        this.#serverError.textContent = `Could not connect: ${reason.endsWith('.') ? reason : `${reason}.`}`;
         return;
       }
 
@@ -330,7 +332,7 @@ class OptionsPage {
 
   /** Reflects access that is already held, so a returning user is not asked for it twice. */
   async #syncGrantedPattern(settings: Settings): Promise<void> {
-    const pattern = originPattern(settings.modelBaseUrl);
+    const pattern = originPattern(settings.modelBaseUrl, BUILD_TARGET);
     if (pattern === null) return;
     try {
       const held = await chrome.permissions.contains(egressPermissions(pattern, BUILD_TARGET));

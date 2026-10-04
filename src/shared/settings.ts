@@ -1,3 +1,4 @@
+import type { BuildTarget } from './target.js';
 import type { AiMode, Settings } from './types.js';
 
 /**
@@ -216,15 +217,24 @@ export function isModelServerConfigured(settings: Settings): boolean {
 }
 
 /**
- * The match pattern for a validated base URL, as narrow as Chrome allows: one scheme, one host, one
- * port. Chrome grants by origin, so the path prefix cannot be part of it: `/engines/v1` is not a
- * separate permission from `/`. Shared because the options page requests exactly this pattern and the
- * worker checks exactly this pattern before every request; two derivations could disagree.
+ * The match pattern for a validated base URL, as narrow as the browser will grant. Browsers grant by
+ * origin, so the path prefix cannot be part of it: `/engines/v1` is not a separate permission from `/`.
+ * Shared because the options page requests exactly this pattern and the worker checks exactly this
+ * pattern before every request; two derivations could disagree.
+ *
+ * Chrome grants one scheme, host and port. Firefox grants an optional pattern only when a declared one
+ * subsumes it, and a declared pattern naming a host (`http://localhost/*`) subsumes only the port-less
+ * form: `http://localhost:11434/*` is refused as undeclared, and declaring `http://localhost:*` does
+ * not help, because Firefox ignores the port wildcard. The port-less grant reaches every port on that
+ * host, so for loopback `http:` it is the narrowest pattern Firefox can give. `https:` keeps its port in
+ * both, since the declared `https://*` subsumes any port.
  */
-export function originPattern(baseUrl: string): string | null {
+export function originPattern(baseUrl: string, target: BuildTarget): string | null {
   if (baseUrl === '') return null;
   try {
-    return `${new URL(baseUrl).origin}/*`;
+    const url = new URL(baseUrl);
+    if (target === 'firefox' && url.protocol === 'http:') return `http://${url.hostname}/*`;
+    return `${url.origin}/*`;
   } catch {
     return null;
   }

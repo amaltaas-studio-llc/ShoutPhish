@@ -350,8 +350,69 @@ function firefoxPage(bidi, context, { privileged }) {
       const { data } = await bidi.send('browsingContext.captureScreenshot', { context });
       await writeFile(file, Buffer.from(data, 'base64'));
     },
+    /**
+     * A click Firefox treats as the user's own. `permissions.request` refuses anything else, including
+     * script run with BiDi's `userActivation`, so a scripted `element.click()` cannot stand in for it.
+     */
+    async click(selector) {
+      const at = await this.evaluate(`() => {
+        const el = document.querySelector(${JSON.stringify(selector)});
+        el.scrollIntoView({ block: 'center' });
+        const r = el.getBoundingClientRect();
+        return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) };
+      }`);
+      await bidi.send('input.performActions', {
+        context,
+        actions: [
+          {
+            type: 'pointer',
+            id: 'mouse',
+            parameters: { pointerType: 'mouse' },
+            actions: [
+              { type: 'pointerMove', x: at.x, y: at.y },
+              { type: 'pointerDown', button: 0 },
+              { type: 'pointerUp', button: 0 },
+            ],
+          },
+        ],
+      });
+      await bidi.send('input.releaseActions', { context });
+    },
     takeErrors: () => errors.splice(0),
   };
+}
+
+/**
+ * Connect, for a model server on a non-default loopback port, the way every runner is configured.
+ * Firefox decides whether a requested host permission is covered by a declared one by its own rules,
+ * which no unit test can reproduce, and a pattern it refuses fails before any prompt is shown. No server
+ * is running, so the connection itself fails; what is checked is that the grant was given and that the
+ * worker accepts it, which shows as a connection error rather than a refusal or "not granted".
+ */
+async function checkConnectGrant(suite, page, extensionBase) {
+  await suite.check('extension', 'Connect is granted for a localhost model server', async () => {
+    await page.goto(`${extensionBase}options.html`);
+    await page.evaluate(`async () => {
+      document.querySelector('input[name="aiMode"][value="server"]').click();
+      const input = document.getElementById('modelBaseUrl');
+      input.value = 'http://localhost:11434/v1';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 500));
+    }`);
+    await page.click('#connect');
+    const message = await waitFor(
+      async () => {
+        // The status line, for a machine that happens to be running a server on that port.
+        const text = await page.evaluate(
+          `() => document.getElementById('serverError').textContent + ' ' + document.getElementById('status').textContent`,
+        );
+        return /browser refused|declined|not been granted|Could not connect|Connected/u.test(text ?? '') ? text : undefined;
+      },
+      'Connect to report an outcome',
+    );
+    // A server refusing the extension's origin ("model server refused") is past the grant, so it passes.
+    if (/browser refused|declined|not been granted/u.test(message)) throw new Error(message);
+  });
 }
 
 async function runFirefox(name, exe, suite) {
@@ -364,6 +425,9 @@ async function runFirefox(name, exe, suite) {
       'user_pref("browser.aboutwelcome.enabled", false);',
       'user_pref("datareporting.policy.dataSubmissionEnabled", false);',
       'user_pref("toolkit.telemetry.reportingpolicy.firstRun", false);',
+      // Grants an optional permission without its prompt, which automation cannot answer. Firefox still
+      // applies every rule about which permissions may be requested; only the user's yes is assumed.
+      'user_pref("extensions.webextOptionalPermissionPrompts", false);',
     ].join('\n'),
   );
   // `-remote-allow-system-access` lets BiDi run script in the extension's own pages; without it Firefox
@@ -406,7 +470,9 @@ async function runFirefox(name, exe, suite) {
     if (context !== undefined) {
       const { context: web } = await bidi.send('browsingContext.create', { type: 'tab' });
       await bidi.send('browsingContext.setViewport', { context: web, viewport: VIEWPORT });
-      await suite.runPages(firefoxPage(bidi, context, { privileged: true }), base, firefoxPage(bidi, web, { privileged: false }));
+      const extensionPage = firefoxPage(bidi, context, { privileged: true });
+      await suite.runPages(extensionPage, base, firefoxPage(bidi, web, { privileged: false }));
+      await checkConnectGrant(suite, extensionPage, base);
     }
     await bidi.send('session.end').catch(() => undefined);
   } catch (error) {

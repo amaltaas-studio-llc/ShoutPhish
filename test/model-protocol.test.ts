@@ -79,19 +79,30 @@ describe('describeHttpFailure', () => {
    */
   it('explains a refusal as the origin policy it is, and names the setting', () => {
     for (const status of [401, 403]) {
-      const message = describeHttpFailure(status);
+      const message = describeHttpFailure(status, 'chromium');
       expect(message).toContain(String(status));
       expect(message).toContain('browser extensions');
       expect(message).toContain('OLLAMA_ORIGINS');
     }
   });
 
+  /**
+   * Each browser presents its own scheme, and a server allowing one refuses the other, so advice naming
+   * Chrome's would tell a Firefox user who already followed it that nothing is wrong with their setup.
+   */
+  it("names the origin this build's browser actually sends, and not the other one", () => {
+    expect(describeHttpFailure(403, 'chromium')).toContain('chrome-extension://*');
+    expect(describeHttpFailure(403, 'chromium')).not.toContain('moz-extension');
+    expect(describeHttpFailure(403, 'firefox')).toContain('moz-extension://*');
+    expect(describeHttpFailure(403, 'firefox')).not.toContain('chrome-extension');
+  });
+
   it('reads a 404 as the wrong path rather than a missing server', () => {
-    expect(describeHttpFailure(404)).toContain('/v1');
+    expect(describeHttpFailure(404, 'chromium')).toContain('/v1');
   });
 
   it('says only what it knows about anything else', () => {
-    expect(describeHttpFailure(500)).toBe('model server returned 500');
+    expect(describeHttpFailure(500, 'firefox')).toBe('model server returned 500');
   });
 });
 

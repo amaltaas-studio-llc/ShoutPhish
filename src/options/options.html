@@ -469,7 +469,9 @@
             <td><code>optional_host_permissions</code></td>
             <td>
               Not granted at install. If you configure your own model server, <strong>Connect</strong>
-              asks for access to that one address, and only that one. Clearing the field gives it back.
+              asks for access to that one address, and only that one. Firefox cannot grant a single
+              port, so for a server on <code>localhost</code> it grants that host on any port; ShoutPhish
+              still contacts only the address you entered. Clearing the field gives it back.
             </td>
           </tr>
         </tbody>

@@ -8,6 +8,7 @@
  * politely saying the model returned nothing usable.
  */
 import { RESPONSE_SCHEMA } from '../analysis/llm/prompt.js';
+import type { BuildTarget } from '../shared/target.js';
 
 /**
  * Request shapes to try, strictest first, each rung asking for less than the one above.
@@ -52,18 +53,29 @@ export const REQUEST_VARIANTS: readonly Readonly<Record<string, unknown>>[] = Ob
 export const MAX_TOKENS = 2000;
 
 /**
+ * The origin a model server has to allow for this build, written the way `OLLAMA_ORIGINS` takes it.
+ *
+ * Per build, because each browser family has its own scheme and a server allowing one refuses the other:
+ * the same Ollama that answers Chrome returns 403 to Firefox. Advice naming the wrong scheme reads as
+ * correct to someone who already followed it, which is the hardest way to be told the wrong thing.
+ */
+export function extensionOriginPattern(target: BuildTarget): string {
+  return target === 'firefox' ? 'moz-extension://*' : 'chrome-extension://*';
+}
+
+/**
  * An HTTP failure worded so the reader can act on it.
  *
  * 403 earns its own sentence because it is the first thing nearly everyone pointing this at Ollama sees,
- * and because the cause is invisible from here: Chrome attaches `Origin: chrome-extension://<id>` to every
- * request the worker makes, and Ollama refuses any origin it was not told to expect. Nothing in the
- * extension can work around it (the header cannot be suppressed, and the address, the port and the
- * permission grant are all correct), so the only useful thing to report is which setting the server needs.
- * "Returned 403" sends the reader hunting for a fault that is not there.
+ * and because the cause is invisible from here: the browser attaches the extension's origin
+ * (`chrome-extension://<id>`, `moz-extension://<uuid>`) to the request, and Ollama refuses any origin it
+ * was not told to expect. Nothing in the extension can work around it (the header cannot be suppressed,
+ * and the address, the port and the permission grant are all correct), so the only useful thing to report
+ * is which setting the server needs. "Returned 403" sends the reader hunting for a fault that is not there.
  */
-export function describeHttpFailure(status: number): string {
+export function describeHttpFailure(status: number, target: BuildTarget): string {
   if (status === 401 || status === 403) {
-    return `model server refused the request (${String(status)}): it is not configured to accept requests from browser extensions. Ollama needs OLLAMA_ORIGINS to include chrome-extension://* before it starts; LM Studio and others have an equivalent CORS setting.`;
+    return `model server refused the request (${String(status)}): it is not configured to accept requests from browser extensions. Ollama needs OLLAMA_ORIGINS to include ${extensionOriginPattern(target)} before it starts; LM Studio and others have an equivalent CORS setting.`;
   }
   if (status === 404) {
     return 'model server returned 404: there is no OpenAI-compatible API at that address. Ollama serves one under /v1.';

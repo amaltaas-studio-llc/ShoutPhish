@@ -51,6 +51,7 @@ import {
   completionText,
   describeHttpFailure,
   describeUnusable,
+  extensionOriginPattern,
   isShapeRejection,
 } from './model-protocol.js';
 
@@ -105,7 +106,7 @@ const TAB_WRITABLE_SETTINGS: ReadonlySet<string> = new Set(['trustedSenders']);
  * extension context can grant itself a host permission.
  */
 async function hasHostAccess(baseUrl: string): Promise<boolean> {
-  const pattern = originPattern(baseUrl);
+  const pattern = originPattern(baseUrl, BUILD_TARGET);
   if (pattern === null) return false;
   try {
     return await chrome.permissions.contains(egressPermissions(pattern, BUILD_TARGET));
@@ -264,7 +265,7 @@ async function postCompletion(
 
     if (!response.ok) {
       return {
-        response: { ok: false, error: describeHttpFailure(response.status) },
+        response: { ok: false, error: describeHttpFailure(response.status, BUILD_TARGET) },
         retryable: isShapeRejection(response.status),
       };
     }
@@ -299,7 +300,8 @@ async function postCompletion(
 /**
  * `GET /models` on the configured server, so the options page can offer what is actually loaded rather
  * than asking the user to type a name from memory. Also the connection test: reaching this means the
- * URL, the port, the permission grant and the server's origin policy are all correct.
+ * URL, the port and the permission grant are correct, and `originRefusal` covers the server's origin
+ * policy where the GET alone cannot.
  */
 async function listModels(): Promise<ExtensionResponse> {
   const settings = await readSettings();
@@ -312,11 +314,14 @@ async function listModels(): Promise<ExtensionResponse> {
       { headers: { accept: 'application/json' } },
       AbortSignal.timeout(MODEL_LIST_TIMEOUT_MS),
     );
-    if (!response.ok) return { ok: false, error: describeHttpFailure(response.status) };
+    if (!response.ok) return { ok: false, error: describeHttpFailure(response.status, BUILD_TARGET) };
 
     const body: unknown = await response.json();
     const data = (body as { data?: unknown }).data;
     if (!Array.isArray(data)) return { ok: false, error: 'server did not return a model list' };
+
+    const refusal = await originRefusal(settings.modelBaseUrl);
+    if (refusal !== null) return { ok: false, error: refusal };
 
     const models = data
       .map((entry) => (entry as { id?: unknown }).id)
@@ -328,8 +333,36 @@ async function listModels(): Promise<ExtensionResponse> {
     return {
       ok: false,
       error:
-        'could not reach the model server: it may not be running, the address may be wrong, or it may be refusing requests from browser extensions (for Ollama, OLLAMA_ORIGINS must include chrome-extension://*)',
+        `could not reach the model server: it may not be running, the address may be wrong, or it may be refusing requests from browser extensions (for Ollama, OLLAMA_ORIGINS must include ${extensionOriginPattern(BUILD_TARGET)})`,
     };
+  }
+}
+
+/**
+ * Whether the server refuses this extension's origin, which the model list cannot show in Firefox.
+ *
+ * Chrome attaches `Origin` to the worker's GET, so a server refusing the extension refuses the list too.
+ * Firefox leaves it off a GET from an extension holding the host permission, but sends it on every POST,
+ * and every analysis is a POST: without this, the list succeeds and reports the server reached while
+ * each analysis is refused with 403. A POST to `/models` carries the header but matches no route, and
+ * Ollama checks the origin before routing: it answers 403 to a refused origin and 405 to an allowed one,
+ * without loading a model. Only 401 and 403 are read as refusal; any other answer, or none, leaves the
+ * list's success standing, because nothing else here is evidence about the origin.
+ */
+async function originRefusal(baseUrl: string): Promise<string | null> {
+  if (BUILD_TARGET !== 'firefox') return null;
+  try {
+    const response = await privateFetch(
+      `${baseUrl}/models`,
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' },
+      AbortSignal.timeout(MODEL_LIST_TIMEOUT_MS),
+    );
+    return response.status === 401 || response.status === 403
+      ? describeHttpFailure(response.status, BUILD_TARGET)
+      : null;
+  } catch (error) {
+    logger.debug('origin check request failed', error);
+    return null;
   }
 }
 

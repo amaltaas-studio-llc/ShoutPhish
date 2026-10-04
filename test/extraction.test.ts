@@ -193,6 +193,9 @@ describe('the diagnostic report', () => {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.7258.67 Safari/537.36',
       ),
     ).toBe('Chrome/139.0.7258.67');
+    expect(
+      browserVersion('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0'),
+    ).toBe('Firefox/158.0');
     expect(browserVersion('something else entirely')).toBe('unknown');
   });
 

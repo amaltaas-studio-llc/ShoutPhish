@@ -97,6 +97,11 @@ corroboration rules: a larger model buys better reasons, not more weight.
 - Base URL from settings; `http:` only for loopback; otherwise `https:`.
 - Optional host permission requested per origin on a click from the options page, and checked by the
   worker before every request, since Chrome alone would still send an ungranted one.
+- The server has to allow the extension's origin, which differs by browser: `chrome-extension://*` for
+  Chrome and Edge, `moz-extension://*` for Firefox (for Ollama, both in `OLLAMA_ORIGINS`, comma-separated,
+  set before it starts). A server allowing one refuses the other with 403, and Firefox omits `Origin` from
+  the model-list GET, so on Firefox the connection test also sends a POST that only the origin check
+  answers (`originRefusal` in `src/background/index.ts`).
 - Endpoint and system prompt never arrive in a runtime message
   ([adr/0009](adr/0009-model-server-and-inert-cloud.md)); a Gmail tab can change only the trust list.
 
