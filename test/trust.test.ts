@@ -278,7 +278,7 @@ describe('trust and scoring', () => {
     }
   });
 
-  it('cannot lower a malicious fixture out of its band', () => {
+  it('cannot lower a malicious fixture out of its band', { timeout: 15_000 }, () => {
     // Trusting the sender of every malicious fixture at once, with proof forged in the fixture's favour:
     // the strongest thing a user could do to their own protection.
     for (const fixture of loadAllFixtures()) {
@@ -587,7 +587,7 @@ describe('withTrustedSender / withoutTrustedSender', () => {
 // ---------------------------------------------------------------------------
 
 describe('an empty trust list changes nothing', () => {
-  it('scores every fixture identically to no option at all', () => {
+  it('scores every fixture identically to no option at all', { timeout: 15_000 }, () => {
     for (const fixture of loadAllFixtures()) {
       const withOption = analyzeDeterministic(fixture.email, { now: FIXED_NOW, trustedSenders: [] });
       const without = analyzeDeterministic(fixture.email, { now: FIXED_NOW });

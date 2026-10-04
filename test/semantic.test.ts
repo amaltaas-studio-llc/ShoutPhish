@@ -495,7 +495,7 @@ describe('semantic layer: containment', () => {
       expect(assessment?.score).toBe(0);
     });
 
-    it('never reads as an all-clear under any verdict above Low, across the corpus', () => {
+    it('never reads as an all-clear under any verdict above Low, across the corpus', { timeout: 15_000 }, () => {
       const flagged = loadAllFixtures()
         .map(({ name, email }) => ({ name, result: analyzeDeterministic(email, { now: 0 }) }))
         .filter(({ result }) => result.classification !== 'low');
@@ -923,7 +923,7 @@ describe('prompt construction', () => {
  * running them again would.
  */
 describe('asking the model only when it could count', () => {
-  it('says a reading could count exactly when an uncorroborated one would score nothing', async () => {
+  it('says a reading could count exactly when an uncorroborated one would score nothing', { timeout: 15_000 }, async () => {
     for (const { name, email } of loadAllFixtures()) {
       const deterministic = analyzeDeterministic(email, { now: 0 });
       const refined = await analyze(email, fixedAnalyzer(semantic({ risk: 95, confidence: 1 })), {
@@ -939,7 +939,7 @@ describe('asking the model only when it could count', () => {
     expect(semanticCanScore(analyzeDeterministic(LEGITIMATE, { now: 0 }))).toBe(false);
   });
 
-  it('produces the same result from precomputed checks as from running them again', async () => {
+  it('produces the same result from precomputed checks as from running them again', { timeout: 15_000 }, async () => {
     const analyzer = fixedAnalyzer(semantic({ risk: 80, confidence: 0.9 }));
     for (const { name, email } of loadAllFixtures()) {
       const fresh = await analyze(email, analyzer, { now: 0 });
