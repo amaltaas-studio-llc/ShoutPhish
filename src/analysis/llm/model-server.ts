@@ -29,6 +29,7 @@ import type {
   SemanticAnalyzer,
   Settings,
 } from '../../shared/types.js';
+import { SemanticFailure } from './failure.js';
 import { buildUserPrompt, describePromptShape } from './prompt.js';
 
 export class ModelServerAnalyzer implements SemanticAnalyzer {
@@ -74,10 +75,13 @@ export class ModelServerAnalyzer implements SemanticAnalyzer {
      * `null` here becomes the `no-output` status, whose card says the model did not return a usable
      * assessment: true when a model was asked and answered badly, and misleading when a server refused,
      * timed out or was never reached, since it sends someone looking at their model instead of their
-     * configuration. A rejection becomes `error` instead, and carries the worker's explanation with it.
+     * configuration. A rejection becomes `error` instead, and carries the worker's explanation with it,
+     * which is fixed text from `background/index.ts` and so may also travel into a diagnostic report.
      */
     if (response?.ok !== true) {
-      throw new Error(response === null ? 'no response from the service worker' : response.error);
+      throw new SemanticFailure(
+        response === null ? 'no response from the service worker' : response.error,
+      );
     }
     if (response.type !== 'SEMANTIC') return null;
     return response.analysis;

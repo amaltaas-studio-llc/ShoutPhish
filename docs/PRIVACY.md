@@ -139,6 +139,14 @@ content, no address, and not the URL, which carries a thread id, i.e. an identif
 message in your mailbox. It is shown in full rather than only copied, so you can read it first, and it is
 sent nowhere unless you paste it somewhere yourself.
 
+The toolbar menu's **Copy a diagnostic report**, which the issue forms ask for, is the same idea for a
+whole session and for a score someone disagrees with. Beyond the above it holds counts (messages seen,
+characters of body read, links, attachments), the ids and points of the checks that ran, timings, how the
+optional AI is set up (its mode, the model's name, and only *whether* the server is on this computer, not
+its address), on/off states of the display settings, how many senders are trusted but not who, and, when a
+model server failed, the extension's own explanation of why. None of it is text from a message or from a
+model's answer.
+
 ### Prompt injection
 
 Assumed to succeed sometimes. Containment is defence in depth: message content is wrapped in delimiters,

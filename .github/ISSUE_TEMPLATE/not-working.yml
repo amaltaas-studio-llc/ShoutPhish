@@ -1,0 +1,75 @@
+name: Something is not working
+description: No badge, a broken card, a setting that does nothing, or the optional AI failing.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This issue is public.** Screenshots of ShoutPhish's own settings page and toolbar menu are
+        welcome; please do not include screenshots of real email.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: What is affected?
+      options:
+        - No badge appears, or it says "Not checked"
+        - The badge or the card looks broken
+        - Warnings in the inbox list
+        - Settings or the welcome page
+        - Optional AI (the browser's built-in model)
+        - Optional AI (my own model server)
+        - Installing or updating
+        - Something else
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Google Chrome
+        - Microsoft Edge
+        - Firefox
+        - Another browser (say which below)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: ShoutPhish version
+      description: Shown at the bottom of ShoutPhish's settings page. The diagnostic report includes it too.
+      placeholder: '0.15.2'
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: >-
+        The steps that lead to it, if you know them. For the optional AI, include any message the settings
+        page or the toolbar menu showed after **Connect** or **Test connection**, and which program serves
+        your model (Ollama, LM Studio, Docker Model Runner, llama.cpp or another).
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Diagnostic report
+      description: >-
+        If the problem happens in Gmail: with a message open, click the ShoutPhish icon in the toolbar and
+        choose **Copy a diagnostic report**, then paste it here. It contains no text from your mail, but
+        please read it first.
+      render: text
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have not included names, email addresses, links or screenshots from real email.
+          required: true

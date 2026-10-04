@@ -17,7 +17,9 @@ import {
   analyzeDeterministic,
   refine,
   semanticCanScore,
+  withSemanticStatus,
 } from '../src/analysis/engine.js';
+import { SemanticFailure } from '../src/analysis/llm/failure.js';
 import { extractJsonObject, parseSemanticAnalysis } from '../src/analysis/llm/parse.js';
 import { semanticToSignals } from '../src/analysis/llm/semantic-signals.js';
 import {
@@ -195,6 +197,30 @@ describe('semantic layer: unavailable', () => {
     it('reports an unasked-for silence as no-output when nothing was cancelled', async () => {
       const result = await analyze(PHISH, cancelledSilently, { now: 0 });
       expect(result.meta.semanticStatus).toBe('no-output');
+    });
+
+    /**
+     * The reason travels into a report pasted in public, so only an explanation the adapter wrote
+     * itself may carry one. A browser API's rejection is not ours to vouch for, and stays a bare error.
+     */
+    it('keeps the reason of a failure the adapter vouched for, and no other', async () => {
+      const refused: SemanticAnalyzer = {
+        id: 'refused',
+        isAvailable: () => Promise.resolve(true),
+        analyze: () => Promise.reject(new SemanticFailure('model server returned 403')),
+      };
+      const vouched = await analyze(PHISH, refused, { now: 0 });
+      expect(vouched.meta.semanticStatus).toBe('error');
+      expect(vouched.meta.semanticReason).toBe('model server returned 403');
+
+      const unvouched = await analyze(PHISH, throwsOnAnalyze, { now: 0 });
+      expect(unvouched.meta.semanticStatus).toBe('error');
+      expect(unvouched.meta).not.toHaveProperty('semanticReason');
+    });
+
+    it('drops an earlier reason when the status is recorded again', () => {
+      const failed = withSemanticStatus(analyzeDeterministic(PHISH, { now: 0 }), 'error', 'timed out');
+      expect(withSemanticStatus(failed, 'ready').meta).not.toHaveProperty('semanticReason');
     });
   });
 

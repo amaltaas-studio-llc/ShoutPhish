@@ -222,6 +222,11 @@ export interface AnalysisResult {
      * was attempted at all.
      */
     semanticStatus?: SemanticStatus;
+    /**
+     * Why the semantic stage failed, when `semanticStatus` is `error` and the adapter that failed wrote
+     * the explanation itself. Never text from the message or a model; see `SemanticFailure`.
+     */
+    semanticReason?: string;
   };
 }
 

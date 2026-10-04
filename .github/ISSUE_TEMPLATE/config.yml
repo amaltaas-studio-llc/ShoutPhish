@@ -1,0 +1,10 @@
+# A blank issue skips the privacy reminder and the diagnostic report that every form asks for, and a pasted
+# email in a public issue cannot be fully taken back.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/amaltaas-studio-llc/ShoutPhish/security/advisories/new
+    about: Privately, so it can be fixed before it is public. See SECURITY.md for what counts.
+  - name: Common questions
+    url: https://github.com/amaltaas-studio-llc/ShoutPhish#questions
+    about: Whether it reads your email, why no badge appears, what it cannot do.

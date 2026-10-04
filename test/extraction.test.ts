@@ -21,11 +21,14 @@ import {
   formatDiagnostic,
   formatHealth,
   summarizeScoring,
+  summarizeSettings,
   type ListPassCounts,
   type ScoringSummary,
   type SelectorProbe,
+  type SettingsSummary,
 } from '../src/gmail/diagnostics.js';
-import type { AnalysisResult, EmailMessage, MessagePart } from '../src/shared/types.js';
+import { DEFAULT_SETTINGS } from '../src/shared/settings.js';
+import type { AnalysisResult, EmailMessage, MessagePart, Settings } from '../src/shared/types.js';
 import { unreadableNotes } from '../src/ui/format.js';
 import { UNREADABLE_LABEL } from '../src/ui/labels.js';
 import { loadFixture } from './fixtures/load.js';
@@ -348,6 +351,7 @@ describe('the session health tally', () => {
       probes: drifting,
       scoring: null,
       listPass: null,
+      settings: null,
     });
 
     expect(report).toContain('senderSpan');
@@ -376,7 +380,11 @@ describe('the scoring half of the report', () => {
   const probes: SelectorProbe[] = [{ group: 'senderSpan', scope: 'message', candidate: 0 }];
   const health = { seen: 1, unscorable: 0, misses: [], drifted: [] };
 
-  function reportFor(scoring: ScoringSummary | null, listPass: ListPassCounts | null = null): string {
+  function reportFor(
+    scoring: ScoringSummary | null,
+    listPass: ListPassCounts | null = null,
+    settings: SettingsSummary | null = null,
+  ): string {
     return formatHealth({
       adapter: 'gmail-dom',
       version: '0.6.0',
@@ -385,6 +393,7 @@ describe('the scoring half of the report', () => {
       probes,
       scoring,
       listPass,
+      settings,
     });
   }
 
@@ -517,5 +526,82 @@ describe('the scoring half of the report', () => {
       'list pass:   92 rows, 92 with an address, 0 marked',
     );
     expect(reportFor(null)).toContain('list pass:   not run');
+  });
+
+  /**
+   * "semantic error" alone could be a refused origin, a missing permission or a stopped server, which
+   * the worker had already told apart; its explanation is fixed text, so it may travel.
+   */
+  it('carries the reason a model server failed, and only for a failure', () => {
+    const failed: AnalysisResult = {
+      ...result,
+      meta: { ...result.meta, semanticStatus: 'error', semanticReason: 'model server returned 403' },
+    };
+    expect(reportFor(summarizeScoring(failed, loud, 'error'))).toContain(
+      'ai failure:  model server returned 403',
+    );
+    expect(reportFor(summarizeScoring(failed, loud, 'ready'))).not.toContain('ai failure:');
+    expect(reportFor(summarizeScoring(result, loud, 'error'))).not.toContain('ai failure:');
+  });
+
+  it('bounds the failure reason', () => {
+    const failed: AnalysisResult = {
+      ...result,
+      meta: { ...result.meta, semanticReason: 'x'.repeat(5000) },
+    };
+    expect(summarizeScoring(failed, loud, 'error').semanticReason).toHaveLength(300);
+  });
+
+  describe('the settings lines', () => {
+    const settings: Settings = {
+      ...DEFAULT_SETTINGS,
+      aiMode: 'server',
+      modelBaseUrl: 'https://SECRETHOST.example/v1',
+      modelName: 'llama3.2:3b',
+      trustedSenders: ['SECRETTRUSTED.example', 'person@SECRETMAIL.example'],
+    };
+
+    it('says how the AI is configured and which settings change what a score means', () => {
+      const report = reportFor(null, null, summarizeSettings(settings));
+      expect(report).toContain('ai:          server (remote), model llama3.2:3b, only when flagged');
+      expect(report).toMatch(/settings: .*inbox marks off.*, 2 trusted senders$/mu);
+    });
+
+    /**
+     * The server's hostname names a machine on someone's network, and the trust list is a list of who
+     * they correspond with. Both are reduced to what a diagnosis needs: where, and how many.
+     */
+    it('carries neither the server address nor who is trusted', () => {
+      const report = reportFor(null, null, summarizeSettings(settings));
+      for (const secret of ['SECRETHOST', 'SECRETTRUSTED', 'SECRETMAIL']) {
+        expect(report).not.toContain(secret);
+      }
+    });
+
+    it('tells a server on this computer from one elsewhere', () => {
+      const local = summarizeSettings({ ...settings, modelBaseUrl: 'http://127.0.0.1:11434/v1' });
+      expect(local.server).toBe('loopback');
+      expect(summarizeSettings({ ...settings, modelBaseUrl: '' }).server).toBe('unset');
+    });
+
+    it('describes the built-in model without server details, and AI off as off', () => {
+      expect(reportFor(null, null, summarizeSettings({ ...settings, aiMode: 'local' }))).toContain(
+        'ai:          local, only when flagged',
+      );
+      expect(reportFor(null, null, summarizeSettings(DEFAULT_SETTINGS))).toContain('ai:          off');
+    });
+
+    it('copies only the fields it declares', () => {
+      expect(Object.keys(summarizeSettings(settings)).sort()).toEqual([
+        'aiMode',
+        'aiOnlyWhenFlagged',
+        'highlightEnabled',
+        'listMarksEnabled',
+        'model',
+        'server',
+        'showBadgeWhenLow',
+        'trustedSenders',
+      ]);
+    });
   });
 });

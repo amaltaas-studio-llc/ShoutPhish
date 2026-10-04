@@ -19,17 +19,20 @@
  * nothing in it that needs interpreting.
  */
 import type {
+  AiMode,
   AnalysisResult,
   AnalysisTiming,
   Classification,
   EmailMessage,
   MessagePart,
   SemanticStatus,
+  Settings,
   Severity,
   SignalCategory,
 } from '../shared/types.js';
 import { addedUp, contributions } from '../analysis/scoring/aggregate.js';
 import type { TabHealth } from '../shared/messaging.js';
+import { isLoopbackHost } from '../shared/settings.js';
 import type { MessageHandle } from './adapter.js';
 import { PAGE_SCOPED, SELECTORS } from './selectors.js';
 
@@ -184,7 +187,18 @@ export interface ScoringSummary {
    * are, which is what a "ShoutPhish is slow" report needs and nothing about the mail.
    */
   timing: AnalysisTiming | null;
+  /**
+   * Why the semantic stage failed, when it did and the explanation is ours; see `SemanticFailure`.
+   *
+   * The one free-text field in the summary, admitted because "semantic error" alone sends both the
+   * reporter and the reader guessing between a refused origin, a missing permission and a stopped
+   * server, which the worker had already told apart.
+   */
+  semanticReason: string | null;
 }
+
+/** Bounds the one free-text field, against a future reason that is longer than any written today. */
+const MAX_REASON_CHARS = 300;
 
 /**
  * Bounds the pasted report. Signal counts are already bounded by the rules that produce them, so this
@@ -225,7 +239,57 @@ export function summarizeScoring(
             aiReused: timing.aiReused,
             ...(timing.aiMs === undefined ? {} : { aiMs: timing.aiMs }),
           },
+    semanticReason:
+      semantic === 'error' && result.meta.semanticReason !== undefined
+        ? result.meta.semanticReason.slice(0, MAX_REASON_CHARS)
+        : null,
   };
+}
+
+/**
+ * The settings that change what a report means, as states and counts.
+ *
+ * The same scores mean different things with the low-risk badge hidden, with inbox marks off, or with
+ * a dozen trusted senders dampening content findings, and a reporter rarely thinks to mention any of
+ * them. What is left out is anything identifying: the model server's address (a hostname on someone's
+ * network), and the trusted senders themselves, which are a list of who someone corresponds with. Only
+ * whether the server is on this computer survives, since that is what decides which failures are likely.
+ */
+export interface SettingsSummary {
+  aiMode: AiMode;
+  aiOnlyWhenFlagged: boolean;
+  server: 'unset' | 'loopback' | 'remote';
+  /** The model as the server names it. A name the user typed from a model catalogue, not an address. */
+  model: string;
+  showBadgeWhenLow: boolean;
+  listMarksEnabled: boolean;
+  highlightEnabled: boolean;
+  trustedSenders: number;
+}
+
+const MAX_MODEL_CHARS = 80;
+
+/** The only constructor for a `SettingsSummary`, for the reason `summarizeScoring` is. */
+export function summarizeSettings(settings: Settings): SettingsSummary {
+  return {
+    aiMode: settings.aiMode,
+    aiOnlyWhenFlagged: settings.aiOnlyWhenFlagged,
+    server: serverLocation(settings.modelBaseUrl),
+    model: settings.modelName.replace(/\s+/gu, ' ').trim().slice(0, MAX_MODEL_CHARS),
+    showBadgeWhenLow: settings.showBadgeWhenLow,
+    listMarksEnabled: settings.listMarksEnabled,
+    highlightEnabled: settings.highlightEnabled,
+    trustedSenders: settings.trustedSenders.length,
+  };
+}
+
+function serverLocation(baseUrl: string): SettingsSummary['server'] {
+  if (baseUrl === '') return 'unset';
+  try {
+    return isLoopbackHost(new URL(baseUrl).hostname) ? 'loopback' : 'remote';
+  } catch {
+    return 'unset';
+  }
 }
 
 /** What the last inbox-list pass saw. Counts only; see `content/list-marks.ts`. */
@@ -246,6 +310,7 @@ export interface HealthInput extends Pick<DiagnosticInput, 'adapter' | 'version'
    */
   scoring: ScoringSummary | null;
   listPass: ListPassCounts | null;
+  settings: SettingsSummary | null;
 }
 
 /**
@@ -275,6 +340,7 @@ export function formatHealth(input: HealthInput): string {
     `not scored:  ${String(health.unscorable)}`,
     `unread:      ${misses}`,
     `list pass:   ${describeListPass(input.listPass)}`,
+    ...settingsLines(input.settings),
     ...scoringLines(input.scoring),
     'selectors:',
   ];
@@ -301,6 +367,24 @@ function describeListPass(counts: ListPassCounts | null): string {
   return `${String(counts.rows)} rows, ${String(counts.addressable)} with an address, ${String(counts.marked)} marked`;
 }
 
+function settingsLines(settings: SettingsSummary | null): string[] {
+  if (settings === null) return ['settings:    not read'];
+  const onOff = (value: boolean): string => (value ? 'on' : 'off');
+  return [
+    `ai:          ${describeAi(settings)}`,
+    `settings:    low-risk badge ${onOff(settings.showBadgeWhenLow)}, inbox marks ${onOff(settings.listMarksEnabled)}, highlight ${onOff(settings.highlightEnabled)}, ${String(settings.trustedSenders)} trusted senders`,
+  ];
+}
+
+/** `server (loopback), model llama3.2:3b, only when flagged`: the three facts an AI failure turns on. */
+function describeAi(settings: SettingsSummary): string {
+  if (settings.aiMode === 'off') return 'off';
+  const when = settings.aiOnlyWhenFlagged ? 'only when flagged' : 'every message';
+  if (settings.aiMode !== 'server') return `${settings.aiMode}, ${when}`;
+  const model = settings.model === '' ? 'no model set' : `model ${settings.model}`;
+  return `server (${settings.server}), ${model}, ${when}`;
+}
+
 /**
  * The message-on-screen section, or the one line that says there is none.
  *
@@ -317,6 +401,8 @@ function scoringLines(scoring: ScoringSummary | null): string[] {
     `read:        body ${String(scoring.bodyChars)}c, ${String(scoring.links)} links, ${String(scoring.attachments)} attachments`,
     `timing:      ${describeTiming(scoring.timing)}`,
   ];
+
+  if (scoring.semanticReason !== null) lines.push(`ai failure:  ${scoring.semanticReason}`);
 
   if (scoring.hidden !== null) {
     lines.push(
@@ -372,7 +458,9 @@ export function buildDiagnostic(
 
 /** The whole report for the session. Takes an object: five positional arguments invite a swap. */
 export function buildHealthReport(
-  input: Pick<HealthInput, 'health' | 'probes' | 'scoring' | 'listPass'> & { adapter: string },
+  input: Pick<HealthInput, 'health' | 'probes' | 'scoring' | 'listPass' | 'settings'> & {
+    adapter: string;
+  },
 ): string {
   return formatHealth({ ...input, ...environment(input.adapter) });
 }

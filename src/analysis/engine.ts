@@ -21,6 +21,7 @@ import type {
 import { isAborted } from '../shared/abort.js';
 import { logger } from '../shared/logger.js';
 import { buildContext, type AnalysisContext } from './context.js';
+import { SemanticFailure } from './llm/failure.js';
 import { isCorroborated, semanticToSignals } from './llm/semantic-signals.js';
 import { runRuleEngine } from './rules/index.js';
 import {
@@ -108,7 +109,7 @@ export async function refine(
 
   const semantic = await runSemanticSafely(analyzer, email, options.signal);
   if (semantic.analysis === null) {
-    return withSemanticStatus(stripContext(deterministic), semantic.status);
+    return withSemanticStatus(stripContext(deterministic), semantic.status, semantic.reason);
   }
 
   // The deterministic signals are passed in so the semantic layer knows whether anything checkable
@@ -130,6 +131,8 @@ interface SemanticOutcome {
   analysis: SemanticAnalysis | null;
   /** Never `pending`, `off` or `skipped`: this describes an attempt that has already finished. */
   status: Exclude<SemanticStatus, 'pending' | 'off' | 'skipped'>;
+  /** Why an `error` happened, only when the adapter vouched for the wording; see `SemanticFailure`. */
+  reason?: string;
 }
 
 /**
@@ -164,7 +167,9 @@ async function runSemanticSafely(
     // An abort surfaces as a rejection in most adapters, and is not a failure of the model.
     if (isAborted(signal)) return { analysis: null, status: 'cancelled' };
     logger.debug('semantic analysis threw', error);
-    return { analysis: null, status: 'error' };
+    return error instanceof SemanticFailure
+      ? { analysis: null, status: 'error', reason: error.message }
+      : { analysis: null, status: 'error' };
   }
 }
 
@@ -181,8 +186,17 @@ export function semanticCanScore(result: Pick<AnalysisResult, 'signals'>): boole
 }
 
 /** Records how the semantic stage ended, without touching anything the rule engine decided. */
-export function withSemanticStatus(result: AnalysisResult, status: SemanticStatus): AnalysisResult {
-  return { ...result, meta: { ...result.meta, semanticStatus: status } };
+export function withSemanticStatus(
+  result: AnalysisResult,
+  status: SemanticStatus,
+  reason?: string,
+): AnalysisResult {
+  // Rebuilt rather than spread, so a reason left over from an earlier attempt cannot outlive it.
+  const { semanticReason: _stale, ...meta } = result.meta;
+  return {
+    ...result,
+    meta: { ...meta, semanticStatus: status, ...(reason === undefined ? {} : { semanticReason: reason }) },
+  };
 }
 
 function buildResult(

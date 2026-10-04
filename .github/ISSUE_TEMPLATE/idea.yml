@@ -1,0 +1,20 @@
+name: Suggest an idea
+description: Something ShoutPhish could notice, explain or do better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would it help with?
+      description: >-
+        The situation you ran into, for example a kind of scam ShoutPhish does not look for, or a finding
+        that was hard to understand. Describe emails rather than pasting them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true

@@ -25,6 +25,7 @@ import {
   buildDiagnostic,
   probeSelectors,
   summarizeScoring,
+  summarizeSettings,
   type ScoringSummary,
 } from '../gmail/diagnostics.js';
 import { GmailObserver, type ObserverEvent } from '../gmail/observer.js';
@@ -471,6 +472,7 @@ export class Controller {
       this.#adapter.id,
       this.#scoringSummary(),
       this.#listMarks.lastPass(),
+      summarizeSettings(this.#settings),
     );
   }
 

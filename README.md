@@ -207,24 +207,6 @@ do not update themselves.
 
 </details>
 
-<details>
-<summary><strong>Building from source</strong></summary>
-
-<br>
-
-```bash
-npm install
-npm run build          # unpacked extension in dist/, ready for "Load unpacked"
-npm run build:firefox  # the Firefox package, in dist-firefox/
-npm run verify         # lint, typecheck, test, build, distribution check
-```
-
-The [development guide](docs/DEVELOPMENT.md) covers the project layout, the UI harness and releases.
-Published downloads can lag behind the source on this page; check the
-[release notes](https://github.com/amaltaas-studio-llc/ShoutPhish/releases) for the version you install.
-
-</details>
-
 ## Make it yours
 
 Open **ShoutPhish in the browser toolbar → Settings**.
@@ -306,10 +288,12 @@ on the current tab.
 
 <br>
 
-The toolbar popup and the card can both produce a diagnostic report.
-[Open an issue](https://github.com/amaltaas-studio-llc/ShoutPhish/issues) with your extension version, what you
-expected, and what you saw. Read anything you attach first and remove private details: message text,
-addresses, links, and screenshots of real mail.
+With the message open, click the ShoutPhish icon in the toolbar and choose **Copy a diagnostic report**.
+It names the checks that ran and what each added to the score, without any text from the message. Then
+[open an issue](https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose) and pick the form that
+fits: a genuine email flagged, a phishing email missed, or something not working. Each form says what to
+include. Please describe the email rather than pasting it, and leave out names, addresses, links and
+screenshots of real mail.
 
 </details>
 
@@ -352,11 +336,8 @@ For the technically curious, and anyone deciding whether to trust an extension w
 | [Architecture](docs/ARCHITECTURE.md) | A short map of where code runs and where to change what. |
 | [Design decisions](docs/adr/) | Why not the obvious alternative. |
 
-### Contributing
-
-The most useful thing you can send is a missed phish or a false alarm, and a failing example in
-`test/fixtures/` is better still. Please use invented examples, never anyone's real mail, and run
-`npm run verify` before opening a pull request.
+To build ShoutPhish yourself or help improve it, start with [CONTRIBUTING.md](CONTRIBUTING.md). To report a
+security problem, please follow [SECURITY.md](SECURITY.md) rather than opening a public issue.
 
 <br>
 

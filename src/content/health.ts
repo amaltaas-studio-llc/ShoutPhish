@@ -24,6 +24,7 @@ import {
   type ListPassCounts,
   type ScoringSummary,
   type SelectorProbe,
+  type SettingsSummary,
 } from '../gmail/diagnostics.js';
 
 export class HealthLog {
@@ -84,6 +85,7 @@ export class HealthLog {
     adapter: string,
     scoring: ScoringSummary | null,
     listPass: ListPassCounts | null,
+    settings: SettingsSummary | null,
   ): string {
     return buildHealthReport({
       adapter,
@@ -91,6 +93,7 @@ export class HealthLog {
       probes: this.#probes,
       scoring,
       listPass,
+      settings,
     });
   }
 }
