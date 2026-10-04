@@ -1,6 +1,6 @@
 {
   "name": "shoutphish",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "private": true,
   "description": "Explainable phishing, malware and social-engineering risk analysis for Gmail, as a browser extension.",
   "license": "MIT",
