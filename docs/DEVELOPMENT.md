@@ -151,7 +151,8 @@ UI change is one command away from being reflected in the README instead of sile
 
 `npm run store:images`, against the same running harness, renders the Chrome Web Store screenshots and
 promo tiles into `store-assets/`, which is not committed. Each screenshot frames the live harness beside
-a sentence, and shows only invented organisations: a famous brand in store images reads as a claim of
+a sentence, except the consent slide, which frames the built `dist/welcome.html` (so `npm run build`
+first). They show only invented organisations: a famous brand in store images reads as a claim of
 association. Which file goes in which dashboard field is in [STORE-LISTING.md](STORE-LISTING.md).
 
 ## Testing

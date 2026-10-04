@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * Renders the Chrome Web Store images into store-assets/ from the UI harness.
+ * Renders the Chrome Web Store images into store-assets/ from the UI harness and the built extension.
  *
+ *   npm run build         # once, for the welcome page
  *   npm run harness       # in one terminal
  *   npm run store:images  # in another
  *
- * Each screenshot is a slide: a sentence on the left and the real harness on the right, in an iframe, so
- * every pixel of UI in a listing is the shipped component scoring a fixture, not a mock-up. That is a
+ * Each screenshot is a slide: a sentence on the left and, on the right in an iframe, the real harness or
+ * the built extension page, so every pixel of UI in a listing is the shipped component, not a mock-up. That is a
  * policy matter as much as a taste one: the store removes listings whose screenshots misrepresent the
  * product.
  *
@@ -72,15 +73,19 @@ const SLIDES = [
     frame: { width: 404, height: 700 },
     dark: true,
   },
+  // The built welcome page itself, opened at the consent section. Its script finds no extension APIs on
+  // file:// and stops, which leaves exactly the static page a new install shows before the click.
   {
-    name: '5-private.png',
-    title: 'Your mail stays on your computer',
-    body: 'Everything runs inside your browser. No account, no tracking, and no network requests unless you add your own AI server.',
-    image: path.join(root, 'docs/assets/privacy.svg'),
-    frame: { width: 760, height: 520 },
+    name: '5-consent.png',
+    title: 'Nothing is read until you agree',
+    body: 'After install, a page says exactly what ShoutPhish reads. Gmail is checked only once you click Start, and every check runs inside your browser.',
+    page: { file: path.join(root, 'dist/welcome.html'), selector: '.consent' },
+    frame: { width: 600, height: 470 },
   },
 ];
 
+/** Space kept around a section fitted into its frame, in CSS pixels. */
+const FIT_MARGIN = 24;
 const BACKGROUND = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #5b21b6 100%)';
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -96,10 +101,23 @@ function escape(text) {
 
 function slideHtml(slide) {
   const { width, height } = slide.frame;
-  const content =
-    slide.image === undefined
-      ? `<iframe src="${escape(harnessUrl(slide.query))}" width="${width}" height="${height}"></iframe>`
-      : `<img src="${escape(pathToFileURL(slide.image).href)}" width="${width}">`;
+  const src = slide.page === undefined ? harnessUrl(slide.query) : pathToFileURL(slide.page.file).href;
+  const content = `<iframe src="${escape(src)}" width="${width}" height="${height}"></iframe>`;
+  // An anchor would put the section flush against the frame's top edge and cut whatever follows it, so
+  // the frame is fitted to the section once it has laid out. Both are file:// pages, which Chrome treats
+  // as one origin under --allow-file-access-from-files.
+  const fit =
+    slide.page === undefined
+      ? ''
+      : `<script>
+  const frame = document.querySelector('iframe');
+  frame.addEventListener('load', () => {
+    const target = frame.contentDocument.querySelector(${JSON.stringify(slide.page.selector)});
+    const box = target.getBoundingClientRect();
+    frame.height = String(Math.ceil(box.height) + 2 * ${String(FIT_MARGIN)});
+    frame.contentWindow.scrollTo(0, box.top + frame.contentWindow.scrollY - ${String(FIT_MARGIN)});
+  });
+</script>`;
   return `<!doctype html>
 <html><head><meta charset="utf-8"><style>
   /* Matching the framed page's scheme, or Chrome paints an opaque backdrop behind the transparent card. */
@@ -113,7 +131,6 @@ function slideHtml(slide) {
   p { font-size: 22px; line-height: 1.45; color: #e0e7ff; margin: 0; }
   .shot { flex: 0 0 auto; background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
   iframe { border: 0; display: block; }
-  img.shot-img { display: block; }
 </style></head><body>
   <div class="copy">
     <div class="brand"><img src="${escape(pathToFileURL(path.join(root, 'assets/icons/icon128.png')).href)}" alt="">ShoutPhish</div>
@@ -121,6 +138,7 @@ function slideHtml(slide) {
     <p>${escape(slide.body)}</p>
   </div>
   <div class="shot"${slide.dark === true ? ' style="background: #1f2023"' : ''}>${content}</div>
+${fit}
 </body></html>`;
 }
 
@@ -211,6 +229,15 @@ const chrome = await findChrome();
 if (!(await reachable(base))) {
   console.error(`The harness is not answering on ${base}. Start it first:\n\n  npm run harness\n`);
   process.exit(1);
+}
+for (const slide of SLIDES) {
+  if (slide.page === undefined) continue;
+  try {
+    await access(slide.page.file);
+  } catch {
+    console.error(`${path.relative(root, slide.page.file)} is missing. Build first:\n\n  npm run build\n`);
+    process.exit(1);
+  }
 }
 
 await rm(outDir, { recursive: true, force: true });

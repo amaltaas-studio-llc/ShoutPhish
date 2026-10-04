@@ -67,6 +67,14 @@ if (
   fail(`manifest version ${JSON.stringify(manifest.version)} is not 1-4 dot-separated integers of 0-65535`);
 }
 
+// The store shows this as the listing's summary and refuses an upload whose description runs past 132
+// characters, which would otherwise surface only once a version number is already tagged.
+if (typeof manifest.description !== 'string' || manifest.description.length === 0) {
+  fail('manifest description is missing; the store shows it as the listing summary');
+} else if (manifest.description.length > 132) {
+  fail(`manifest description is ${String(manifest.description.length)} characters; the store allows 132`);
+}
+
 /*
  * The README and docs/PRIVACY.md tell users exactly which permissions they are granting. A change here is
  * a change to that promise, so it fails until this list (and both documents) are updated in the same

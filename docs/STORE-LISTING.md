@@ -13,8 +13,10 @@ The same zip and most of this text also serve Microsoft's
 
 Upload `shoutphish-VERSION.zip` from the [GitHub release](https://github.com/amaltaas-studio-llc/ShoutPhish/releases),
 never a local build: the release zip is the one CI verified, and its source is the tagged commit. The
-manifest's `name`, `description` and `version` become the listing's title, summary and version, so neither
-is typed in the dashboard.
+manifest's `name`, `description` and `version` become the listing's title, summary and version, so none
+is typed in the dashboard. The description is `package.json`'s, which the build copies into the manifest;
+changing the summary therefore takes a new version, and `check:dist` holds it to the store's 132
+characters.
 
 ## Store listing tab
 
@@ -52,12 +54,13 @@ ShoutPhish is not affiliated with Google. It is a second opinion, not a guarante
 
 **Category:** Privacy & Security. **Language:** English.
 
-**Images**, from `npm run harness` then `npm run store:images`, written to `store-assets/`:
+**Images**, from `npm run build`, `npm run harness`, then `npm run store:images`, written to
+`store-assets/`. The dashboard takes new images at any time, without a new version:
 
 | Dashboard field | File |
 | --- | --- |
 | Store icon (128×128) | `dist/icons/icon128.png` |
-| Screenshots (1280×800, up to 5, in this order) | `1-explained.png` … `5-private.png` |
+| Screenshots (1280×800, up to 5, in this order) | `1-explained.png` … `5-consent.png` |
 | Small promo tile (440×280) | `tile-small.png` |
 | Marquee promo tile (1400×560, optional) | `tile-marquee.png` |
 
@@ -150,7 +153,7 @@ listed version is submitted, before Mozilla's reviewer reaches it:
 - **Privacy policy:** paste the text of [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md). AMO hosts the text
   itself rather than linking to it, so it has to be pasted again whenever that file changes.
 - **Screenshots:** the same five images as the Chrome listing, `store-assets/1-explained.png` …
-  `5-private.png`. AMO shows them at 1.6:1, which 1280×800 already is.
+  `5-consent.png`. AMO shows them at 1.6:1, which 1280×800 already is.
 - **Support site:** `https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose`.
 
 If the listing shows a generic icon, upload `dist-firefox/icons/icon128.png` on the same page.

@@ -2,7 +2,7 @@
   "name": "shoutphish",
   "version": "0.16.1",
   "private": true,
-  "description": "Explainable phishing and social-engineering risk analysis for Gmail.",
+  "description": "Phishing checks for Gmail that explain every point of the score. Runs in your browser, with no network requests by default.",
   "license": "MIT",
   "author": "Amaltaas Studio LLC",
   "type": "module",
