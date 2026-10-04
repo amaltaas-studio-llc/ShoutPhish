@@ -361,21 +361,30 @@ function firefoxPage(bidi, context, { privileged }) {
         const r = el.getBoundingClientRect();
         return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) };
       }`);
-      await bidi.send('input.performActions', {
-        context,
-        actions: [
-          {
-            type: 'pointer',
-            id: 'mouse',
-            parameters: { pointerType: 'mouse' },
-            actions: [
-              { type: 'pointerMove', x: at.x, y: at.y },
-              { type: 'pointerDown', button: 0 },
-              { type: 'pointerUp', button: 0 },
-            ],
-          },
-        ],
-      });
+      try {
+        await bidi.send('input.performActions', {
+          context,
+          actions: [
+            {
+              type: 'pointer',
+              id: 'mouse',
+              parameters: { pointerType: 'mouse' },
+              actions: [
+                { type: 'pointerMove', x: at.x, y: at.y },
+                { type: 'pointerDown', button: 0 },
+                { type: 'pointerUp', button: 0 },
+              ],
+            },
+          ],
+        });
+      } catch (error) {
+        // Some Firefox releases (156, for one) refuse input in extension pages even with system access,
+        // where ESR and 158 accept it. Nothing about the extension is learned from that refusal.
+        if (/^input\.performActions: unsupported operation/u.test(String(error?.message))) {
+          throw new NotRunnable(`this Firefox does not let automation click in extension pages (${String(error.message)})`);
+        }
+        throw error;
+      }
       await bidi.send('input.releaseActions', { context });
     },
     takeErrors: () => errors.splice(0),
@@ -668,6 +677,14 @@ function extensionProblems(page, facts) {
   return problems;
 }
 
+/**
+ * A check the browser cannot be driven to perform. Reported as not run, by name, rather than as a pass
+ * or a failure: a pass would claim coverage that did not happen, and a failure would be a finding about
+ * the test harness rather than the extension. Only for a refusal the browser states outright; anything
+ * else that goes wrong is a failure.
+ */
+class NotRunnable extends Error {}
+
 class Suite {
   results = [];
 
@@ -687,7 +704,11 @@ class Suite {
       this.results.push({ browser: this.browser, area, name, ok: true });
       return value;
     } catch (error) {
-      this.fail(area, name, String(error?.message ?? error));
+      if (error instanceof NotRunnable) {
+        this.results.push({ browser: this.browser, area, name, ok: true, notRun: error.message });
+      } else {
+        this.fail(area, name, String(error?.message ?? error));
+      }
       return undefined;
     }
   }
@@ -802,7 +823,11 @@ async function main() {
       const started = Date.now();
       await (BROWSERS[name].engine === 'firefox' ? runFirefox(name, exe, suite) : runChromium(name, exe, suite));
       const failed = suite.results.filter((r) => !r.ok);
-      console.log(`${name}: ${suite.results.length - failed.length}/${suite.results.length} checks passed in ${((Date.now() - started) / 1000).toFixed(1)}s`);
+      const notRun = suite.results.filter((r) => r.notRun !== undefined);
+      const passed = suite.results.length - failed.length - notRun.length;
+      const unrun = notRun.length > 0 ? `, ${notRun.length} not run` : '';
+      console.log(`${name}: ${passed}/${suite.results.length} checks passed${unrun} in ${((Date.now() - started) / 1000).toFixed(1)}s`);
+      for (const r of notRun) console.log(`  NOT RUN ${r.area} / ${r.name}\n    ${r.notRun}`);
       for (const r of failed) console.log(`  FAIL ${r.area} / ${r.name}\n    ${(r.detail ?? '').replaceAll('\n', '\n    ')}`);
       results.push(...suite.results);
     }

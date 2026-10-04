@@ -209,7 +209,13 @@ one browser. `scripts/browser-smoke.mjs` loads the real thing into real browsers
   sentence is on the unreadable card, and nothing logs an error.
 - **The extension**, loaded unpacked: the background starts, the welcome page opens on install, and the
   welcome, options and popup pages load without errors. The on-device choice is offered exactly where
-  the browser has a Prompt API, and the options page shows the right version.
+  the browser has a Prompt API, and the options page shows the right version. In Firefox, **Connect** on
+  a localhost model server is clicked for real and must be granted, since which host permissions Firefox
+  accepts is its own rule that no unit test reproduces.
+
+Some Firefox releases (156, for one) refuse automated clicks in extension pages. That check is then
+reported as **NOT RUN**, by name, instead of passing or failing; ESR, which `smoke:docker` uses, and
+newer releases run it.
 
 ```bash
 npm run smoke:browsers                           # every supported browser installed here
