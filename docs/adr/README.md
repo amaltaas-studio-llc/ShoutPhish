@@ -18,8 +18,9 @@ are about to change the decision they describe; day-to-day work starts from
 | [0010](0010-hostile-input-posture.md) | Nothing from a message is fetched or executed |
 | [0011](0011-ci-harness-no-dist-in-repo.md) | verify includes build and dist check; no committed dist/ |
 | [0012](0012-one-source-per-browser-manifests.md) | One source tree; a manifest per browser family, chosen at build time |
-| [0013](0013-firefox-signed-unlisted.md) | Firefox builds are signed by Mozilla for self-distribution, not listed |
+| [0013](0013-firefox-signed-unlisted.md) | Firefox builds are signed by Mozilla for self-distribution, not listed (superseded by 0015) |
 | [0014](0014-consent-before-reading.md) | Nothing in Gmail is read until the reader agrees on the welcome page |
+| [0015](0015-firefox-listed-on-amo.md) | Firefox releases are listed on addons.mozilla.org |
 
 Each file uses the same shape: **Status**, **Context**, **Decision**, **Consequences**,
 **Rejected alternatives**.

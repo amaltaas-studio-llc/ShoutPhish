@@ -1,0 +1,21 @@
+{
+  "slug": "shoutphish",
+  "default_locale": "en-US",
+  "categories": {
+    "firefox": ["privacy-security"]
+  },
+  "summary": {
+    "en-US": "Checks the email you open in Gmail for signs of phishing, scores it from 0 to 100, and explains every point with evidence you can check. Every check runs in your browser, with no network requests by default."
+  },
+  "description": {
+    "en-US": "ShoutPhish checks the email you open in Gmail for signs of phishing, scores it from 0 to 100, and explains every point of that score in plain words, with the evidence so you can check it yourself.\n\n**What it notices**\n\n- Sender names that claim a company the address does not belong to, and addresses one letter away from a real one\n- Links whose text says one thing while the destination is somewhere else\n- A reply in a conversation from a lookalike of someone already in it\n- Requests for codes, passwords, payments or gift cards, and urgent pressure to act\n- Dangerous or disguised attachments, judged by file name only\n- Hidden text and other tricks used to get past filters\n\n**Quiet on ordinary mail**\n\nGenuine messages stay Low Risk, and the badge can stay hidden until something is worth a look. When ShoutPhish cannot read a message properly, it says \"Not checked\" instead of pretending it is safe.\n\n**Your mail stays on your computer**\n\n- Nothing is read until you agree on the welcome page that opens after install.\n- Every check runs inside your browser. Out of the box, ShoutPhish makes no network requests at all.\n- No account, no analytics, no advertising, no tracking. There is no ShoutPhish server.\n- Message content is never saved. Only your settings and the senders you choose to trust are stored.\n- Links, images and attachments in a message are never opened.\n- Two permissions: access to Gmail, and storage for your settings.\n\n**Optional AI**\n\nYou can add a plain-language reading from an AI server you run yourself, such as Ollama. It is off until you turn it on, and Firefox asks you before ShoutPhish may send anything to that address. The AI can add at most 15 of the 100 points and can never outvote the checks.\n\n**Open source**\n\nThe source code, the privacy policy, and a full account of what is read and why are public: https://github.com/amaltaas-studio-llc/ShoutPhish\n\nShoutPhish is not affiliated with Google or Mozilla. It is a second opinion, not a guarantee: no checker catches every phishing message."
+  },
+  "homepage": {
+    "en-US": "https://github.com/amaltaas-studio-llc/ShoutPhish"
+  },
+  "version": {
+    "license": "MIT",
+    "compatibility": ["firefox"],
+    "approval_notes": "Testing: only a Gmail account is needed. On install, a welcome page explains what is read; click \"Start checking my mail\" (until then the toolbar icon shows OFF). Open any email in Gmail: a badge appears by the sender, and clicking it opens a card explaining the score. Ordinary mail is Low Risk. To see a warning, email yourself from another account with the display name \"PayPal Billing\" and the text \"Please verify your account\": it shows High Risk.\n\nSource: the attached archive is a git archive of the release tag. With Node 24, run `npm ci && npm run build:firefox`; the package is the contents of dist-firefox/. The bundles are produced by esbuild and minified. There are no runtime dependencies.\n\nPermissions: https://mail.google.com/* is the only site it runs on. The optional host permissions (http://localhost/*, http://127.0.0.1/*, https://*/*) are never requested automatically: only when the user enters the address of their own AI model server on the options page and clicks Connect, and then for that one origin, together with the optional personalCommunications data consent. No address ever comes from an email, and nothing in a message (links, images, attachments) is ever fetched."
+  }
+}

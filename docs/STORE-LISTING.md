@@ -1,9 +1,10 @@
-# Chrome Web Store listing
+# Store listings
 
-Every field the [developer dashboard](https://chrome.google.com/webstore/devconsole) asks for, with the
-text to paste. Kept in the repository because the privacy answers are a public claim about the code: the
-store removes an item whose dashboard answers, privacy policy and behaviour disagree, so when behaviour
-changes, this file changes in the same commit, the same way `docs/PRIVACY.md` does.
+Every field the Chrome Web Store [developer dashboard](https://chrome.google.com/webstore/devconsole) asks
+for, with the text to paste, and then what addons.mozilla.org needs [at the end](#addonsmozillaorg). Kept in
+the repository because the privacy answers are a public claim about the code: a store removes an item whose
+answers, privacy policy and behaviour disagree, so when behaviour changes, this file changes in the same
+commit, the same way `docs/PRIVACY.md` does.
 
 The same zip and most of this text also serve Microsoft's
 [Edge Add-ons](https://partner.microsoft.com/dashboard/microsoftedge/overview), which is free.
@@ -129,3 +130,27 @@ submission.
 The prominent-disclosure requirement is met by the welcome page: the paragraph beside its button names
 what is read, and nothing in Gmail is read before the click
 ([ADR 0014](adr/0014-consent-before-reading.md)).
+
+## addons.mozilla.org
+
+Nothing is uploaded by hand. The release workflow submits each version on the listed channel together with
+[`amo-metadata.json`](amo-metadata.json): summary, description, category, homepage, licence, desktop-only
+compatibility and the notes for Mozilla's reviewers ([ADR 0015](adr/0015-firefox-listed-on-amo.md)). Edit
+the listing there, not in the Developer Hub, because the next release sends the file again and replaces
+what was typed. Its description is the Chrome one above without Chrome's built-in AI, which Firefox does
+not offer, and the two should change together.
+
+The data-collection answers come from the manifest (`browser_specific_settings.gecko`), which Firefox also
+shows at install, so there is nothing to declare separately.
+
+Three things have no field `web-ext` can submit. Set them once in the
+[Developer Hub](https://addons.mozilla.org/developers/addons) under **Edit Product Page** after the first
+listed version is submitted, before Mozilla's reviewer reaches it:
+
+- **Privacy policy:** paste the text of [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md). AMO hosts the text
+  itself rather than linking to it, so it has to be pasted again whenever that file changes.
+- **Screenshots:** the same five images as the Chrome listing, `store-assets/1-explained.png` …
+  `5-private.png`. AMO shows them at 1.6:1, which 1280×800 already is.
+- **Support site:** `https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose`.
+
+If the listing shows a generic icon, upload `dist-firefox/icons/icon128.png` on the same page.

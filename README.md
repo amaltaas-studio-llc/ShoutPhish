@@ -186,14 +186,11 @@ or in other email programs.
 
 **In Firefox:**
 
-1. From the same **[latest release](https://github.com/amaltaas-studio-llc/ShoutPhish/releases/latest)**,
-   download `shoutphish-firefox-<version>.xpi`.
-2. Type `about:addons` into the address bar, click the gear icon, and choose **Install Add-on From File**.
-3. Choose the downloaded file and click **Add** when Firefox asks.
-4. On the welcome page that opens, click **Start checking my mail**, then open or refresh Gmail.
+1. Open **[ShoutPhish on Firefox Add-ons](https://addons.mozilla.org/firefox/addon/shoutphish/)** and click
+   **Add to Firefox**.
+2. On the welcome page that opens, click **Start checking my mail**, then open or refresh Gmail.
 
-The Firefox download is signed by Mozilla, so it stays installed when Firefox restarts. It is not listed in
-Mozilla's add-on store, which is why it comes from the release page instead.
+Firefox keeps it up to date by itself.
 
 ShoutPhish reads nothing until you click that button, and the toolbar icon says **OFF** until then. After
 that there is nothing else to configure: every core check works straight away. Pin ShoutPhish from the browser's
@@ -205,9 +202,10 @@ Extensions menu (the puzzle-piece icon) to keep its score and settings one click
 <br>
 
 Download and unzip the newer release over the same folder, click **Reload** on ShoutPhish at
-`chrome://extensions` (or `edge://extensions`), then refresh Gmail. In Firefox, install the newer `.xpi` the
-same way you installed the first one; it replaces the old version and keeps your settings. Manual installs
-do not update themselves.
+`chrome://extensions` (or `edge://extensions`), then refresh Gmail. Manual installs do not update
+themselves. If you installed Firefox's `.xpi` from an earlier release, install from
+[Firefox Add-ons](https://addons.mozilla.org/firefox/addon/shoutphish/) once to be sure of updates; it
+replaces the old version and keeps your settings.
 
 </details>
 

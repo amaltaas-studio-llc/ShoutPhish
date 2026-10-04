@@ -1,5 +1,5 @@
-# Publishes a release when a v* tag is pushed, with the packaged extension attached: a zip for Chromium
-# browsers and a Mozilla-signed .xpi for Firefox.
+# Publishes a release when a v* tag is pushed, with the Chromium zip attached, and submits the same version
+# to addons.mozilla.org, which lists and signs it for Firefox once Mozilla's review passes.
 #
 #   npm version patch    # or minor / major; writes package.json and creates the tag
 #   git push --follow-tags
@@ -12,11 +12,11 @@
 # someone deciding whether to update is a problem to fix in the commit message, not here.
 #
 # Three jobs, because `npm ci` runs the install scripts of every dev dependency. The build job runs them,
-# can only read the repository, and holds no secret. The sign job is the only one given the
+# can only read the repository, and holds no secret. The submit job is the only one given the
 # addons.mozilla.org key: it installs with scripts disabled and runs nothing but `web-ext` on the Firefox zip
 # the build job tested. The publish job holds the only write token and runs nothing but `gh`. Merging any
-# two would hand a compromised dev dependency either the power to publish a release or the key to sign as
-# ShoutPhish.
+# two would hand a compromised dev dependency either the power to publish a release or the key to publish
+# as ShoutPhish.
 name: Release
 
 on:
@@ -119,22 +119,19 @@ jobs:
           cat >> release/notes.md <<'NOTES'
           ### Install
 
-          ShoutPhish is not listed on the Chrome Web Store, Edge Add-ons or addons.mozilla.org yet.
+          **Firefox 140 or later**
+
+          Install from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/shoutphish/). Firefox
+          keeps it up to date. Each version appears there once Mozilla's review passes, which can be a few
+          days after this release.
 
           **Chrome or Edge**
 
           1. Download `shoutphish-${{ steps.meta.outputs.version }}.zip` below and unzip it.
           2. Open `chrome://extensions` (or `edge://extensions` in Edge) and turn on **Developer mode**.
           3. Choose **Load unpacked** and select the unzipped folder.
-          4. Open a message in Gmail. The risk score appears beside the sender's address.
-
-          **Firefox 140 or later**
-
-          1. Download `shoutphish-firefox-${{ steps.meta.outputs.version }}.xpi` below.
-          2. Open `about:addons`, click the gear icon, and choose **Install Add-on From File**.
-          3. Select the downloaded file, choose **Add**, then open a message in Gmail.
-
-          The file is signed by Mozilla, so it stays installed when Firefox restarts.
+          4. On the welcome page that opens, click **Start checking my mail**, then open a message in Gmail.
+             The risk score appears beside the sender's address.
 
           Analysis runs entirely in your browser and no API key is required. AI analysis is off by default;
           the deterministic checks produce a full score without it. You can turn it on in the options to use
@@ -151,18 +148,20 @@ jobs:
           path: release/
           if-no-files-found: error
 
-  # Unlisted: Mozilla signs the package for distribution from these releases without listing it on
-  # addons.mozilla.org. A version number can be submitted once, so a failure after the upload is accepted
-  # cannot be fixed by re-running this job; release the next patch version instead.
-  sign:
-    name: Sign for Firefox
+  # Listed: the version goes to Mozilla's review and appears on addons.mozilla.org when it passes, so the
+  # job submits and does not wait. A review can take days, and holding the release for it would leave the
+  # Chromium zip unpublished meanwhile. A version number can be submitted once, so a failure after the
+  # upload is accepted cannot be fixed by re-running this job; release the next patch version instead.
+  submit:
+    name: Submit to addons.mozilla.org
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
-      # Checked out only for the lockfile, so `web-ext` is the reviewed version with verified integrity.
+      # Checked out for the lockfile, so `web-ext` is the reviewed version with verified integrity, and for
+      # the listing text in docs/amo-metadata.json, read at the tagged commit.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -180,40 +179,27 @@ jobs:
           path: release
 
       # The key arrives as environment variables, which web-ext reads as its --api-key and --api-secret,
-      # so it never appears in a command line that the process list or a log could show.
-      - name: Sign
+      # so it never appears in a command line that the process list or a log could show. The metadata is
+      # sent with every version, so the listing always says what the tagged commit says.
+      - name: Submit
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
           WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
           VERSION: ${{ needs.build.outputs.version }}
         run: |
           set -euo pipefail
-          mkdir firefox signed
+          mkdir firefox
           unzip -q "release/shoutphish-firefox-${VERSION}.zip" -d firefox
           ./node_modules/.bin/web-ext sign \
-            --channel=unlisted \
+            --channel=listed \
             --source-dir=firefox \
-            --artifacts-dir=signed \
+            --amo-metadata=docs/amo-metadata.json \
             --upload-source-code="release/shoutphish-source-${VERSION}.zip" \
-            --approval-timeout=1800000
-          shopt -s nullglob
-          signed=(signed/*.xpi)
-          if [ "${#signed[@]}" -ne 1 ]; then
-            echo "::error::expected one signed .xpi from web-ext, found ${#signed[@]}"
-            exit 1
-          fi
-          mv "${signed[0]}" "signed/shoutphish-firefox-${VERSION}.xpi"
-          unzip -l "signed/shoutphish-firefox-${VERSION}.xpi"
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: signed
-          path: signed/
-          if-no-files-found: error
+            --approval-timeout=0
 
   publish:
     name: Publish
-    needs: [build, sign]
+    needs: [build, submit]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -223,14 +209,9 @@ jobs:
           name: release
           path: release
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: signed
-          path: signed
-
       # No checkout: `--repo` names the repository, and the tag already exists because pushing it is what
       # started this run. The unsigned Firefox zip is not attached: release Firefox would keep it only
-      # until a restart, and a second Firefox download would invite picking the wrong one.
+      # until a restart, and addons.mozilla.org is where the signed one is.
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -238,7 +219,6 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             "release/shoutphish-${VERSION}.zip" \
-            "signed/shoutphish-firefox-${VERSION}.xpi" \
             --repo "${{ github.repository }}" \
             --title "ShoutPhish $GITHUB_REF_NAME" \
             --notes-file release/notes.md

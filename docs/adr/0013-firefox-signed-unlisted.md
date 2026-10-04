@@ -1,6 +1,6 @@
 # 0013. Firefox builds are signed by Mozilla for self-distribution, not listed
 
-**Status:** Accepted
+**Status:** Superseded by [0015](0015-firefox-listed-on-amo.md)
 
 ## Context
 
