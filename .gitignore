@@ -9,6 +9,7 @@ dist-firefox/
 coverage/
 *.tsbuildinfo
 smoke-output/
+store-assets/
 
 # UI harness bundle, rebuilt by `npm run harness`
 harness/.build/

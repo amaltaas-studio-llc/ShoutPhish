@@ -54,6 +54,7 @@ class OptionsPage {
   readonly #trustedEmpty = requireElement('trustedEmpty', HTMLParagraphElement);
   readonly #aiOnlyWhenFlaggedOption = requireElement('aiOnlyWhenFlaggedOption', HTMLLabelElement);
   readonly #aiOnlyWhenFlagged = requireElement('aiOnlyWhenFlagged', HTMLInputElement);
+  readonly #analysisConsent = requireElement('analysisConsent', HTMLInputElement);
   readonly #showBadgeWhenLow = requireElement('showBadgeWhenLow', HTMLInputElement);
   readonly #listMarksEnabled = requireElement('listMarksEnabled', HTMLInputElement);
   readonly #highlightEnabled = requireElement('highlightEnabled', HTMLInputElement);
@@ -89,6 +90,7 @@ class OptionsPage {
     }
 
     const toggles = [
+      [this.#analysisConsent, 'analysisConsent'],
       [this.#aiOnlyWhenFlagged, 'aiOnlyWhenFlagged'],
       [this.#showBadgeWhenLow, 'showBadgeWhenLow'],
       [this.#listMarksEnabled, 'listMarksEnabled'],
@@ -141,6 +143,7 @@ class OptionsPage {
     // invites the question of why it cannot be changed.
     this.#aiOnlyWhenFlaggedOption.hidden = settings.aiMode === 'off';
     this.#aiOnlyWhenFlagged.checked = settings.aiOnlyWhenFlagged;
+    this.#analysisConsent.checked = settings.analysisConsent;
     this.#showBadgeWhenLow.checked = settings.showBadgeWhenLow;
     this.#listMarksEnabled.checked = settings.listMarksEnabled;
     this.#highlightEnabled.checked = settings.highlightEnabled;

@@ -26,6 +26,7 @@ function changed(patch: Partial<Settings>): ReturnType<typeof settingsImpact> {
  * about the extension's behaviour would not be a setting.
  */
 const ALTERNATIVES: { [K in keyof Settings]: Settings[K] } = {
+  analysisConsent: true,
   aiMode: 'local',
   aiOnlyWhenFlagged: false,
   highlightEnabled: false,
@@ -86,6 +87,11 @@ describe('settingsImpact', () => {
    */
   it('re-scores, without discarding the model, when the gate on asking it changes', () => {
     expect(changed({ aiOnlyWhenFlagged: false })).toMatchObject({ rescore: true, remodel: false });
+  });
+
+  /** Starting or stopping reading is not a re-analysis: one begins from nothing, the other ends in nothing. */
+  it('reports consent as its own change', () => {
+    expect(changed({ analysisConsent: true })).toMatchObject({ consent: true, rescore: false });
   });
 
   it('keeps the two annotations that own their own teardown separate', () => {

@@ -137,6 +137,7 @@ let tabListeners: ((
 function settings(over: Partial<Settings> = {}): Settings {
   return {
     ...DEFAULT_SETTINGS,
+    analysisConsent: true,
     aiMode: 'server',
     aiOnlyWhenFlagged: false,
     modelBaseUrl: 'http://127.0.0.1:11434/v1',
@@ -292,6 +293,65 @@ describe('a message opened with a model configured', () => {
     expect(badgeIsOnScreen()).toBe(true);
     expect(inferences).toHaveLength(1);
     expect(tabStatus()).toMatchObject({ kind: 'scored', semantic: 'ready' });
+  });
+});
+
+/**
+ * Until the reader agrees on the welcome page, the content script is present in Gmail and reads none of
+ * it. Agreement and withdrawal both arrive as a settings write, and an open tab has to follow either
+ * without being reloaded, or the button that says "start" would appear not to work.
+ */
+describe('before the reader has agreed to their mail being read', () => {
+  async function startWithout(): Promise<void> {
+    controller.stop();
+    document.body.replaceChildren();
+    inferences = [];
+    // The stub's `removeListener` is a no-op, so the stopped controller would otherwise still answer.
+    storageListeners = [];
+    tabListeners = [];
+    stored = settings({ analysisConsent: false });
+    adapter = new FakeAdapter();
+    controller = new Controller(adapter);
+    await controller.start();
+    await vi.advanceTimersByTimeAsync(500);
+    await flush();
+  }
+
+  it('reads nothing, shows nothing and asks no model', async () => {
+    await startWithout();
+
+    expect(badgeIsOnScreen()).toBe(false);
+    expect(inferences).toHaveLength(0);
+    expect(tabStatus()).toEqual({ kind: 'no-message' });
+  });
+
+  it('starts checking an open tab as soon as consent is given', async () => {
+    await startWithout();
+
+    writeSettings(settings({ analysisConsent: true }));
+    await vi.advanceTimersByTimeAsync(500);
+    await flush();
+
+    expect(badgeIsOnScreen()).toBe(true);
+    expect(inferences).toHaveLength(1);
+    expect(tabStatus()).toMatchObject({ kind: 'scored' });
+  });
+
+  it('removes everything it showed, and stops reading, when consent is withdrawn', async () => {
+    expect(badgeIsOnScreen()).toBe(true);
+
+    writeSettings(settings({ analysisConsent: false }));
+    await flush();
+    expect(badgeIsOnScreen()).toBe(false);
+    expect(tabStatus()).toEqual({ kind: 'no-message' });
+
+    // Gmail keeps redrawing; a stopped reader must not pick the message back up.
+    adapter.replaceHeader();
+    document.body.append(document.createElement('div'));
+    await vi.advanceTimersByTimeAsync(500);
+    await flush();
+    expect(badgeIsOnScreen()).toBe(false);
+    expect(inferences).toHaveLength(1);
   });
 });
 

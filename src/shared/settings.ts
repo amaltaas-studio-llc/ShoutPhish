@@ -7,6 +7,7 @@ import type { AiMode, Settings } from './types.js';
  * backend URL, so there is no configuration in which the MVP sends message content off the machine.
  */
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
+  analysisConsent: false,
   aiMode: 'off',
   aiOnlyWhenFlagged: true,
   highlightEnabled: true,
@@ -37,7 +38,7 @@ export function isAiMode(value: unknown): value is AiMode {
  * older version of the extension, so it is validated rather than trusted.
  */
 export function normalizeSettings(raw: unknown): Settings {
-  if (raw === null || typeof raw !== 'object') return { ...DEFAULT_SETTINGS };
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { ...DEFAULT_SETTINGS };
   const source = raw as Record<string, unknown>;
   const flag = (key: BooleanSettingKey): boolean => {
     const value = source[key];
@@ -45,6 +46,16 @@ export function normalizeSettings(raw: unknown): Settings {
   };
 
   return {
+    /*
+     * Stored settings without the key were written by a version from before consent existed, which was
+     * already reading mail, with the welcome page's disclosure shown at install. Those count as agreed,
+     * so an update the reader never asked for does not silently switch the extension off. Decided here
+     * rather than once in `onInstalled`, because an older version on another synced browser keeps
+     * rewriting the object without the key, and a one-off migration would be undone by it. A fresh
+     * install has no stored object at all and gets the default, `false`. A value that is present but
+     * not a boolean is damage rather than history, and agreement is never inferred from damage.
+     */
+    analysisConsent: 'analysisConsent' in source ? source['analysisConsent'] === true : true,
     aiMode: isAiMode(source['aiMode']) ? source['aiMode'] : DEFAULT_SETTINGS.aiMode,
     aiOnlyWhenFlagged: flag('aiOnlyWhenFlagged'),
     highlightEnabled: flag('highlightEnabled'),
@@ -257,6 +268,8 @@ export interface SettingsImpact {
   repaint: boolean;
   listMarks: boolean;
   highlights: boolean;
+  /** Reading mail was started or stopped, which outranks every other part of the change. */
+  consent: boolean;
 }
 
 export function settingsImpact(previous: Settings, next: Settings): SettingsImpact {
@@ -282,6 +295,7 @@ export function settingsImpact(previous: Settings, next: Settings): SettingsImpa
     repaint: previous.showBadgeWhenLow !== next.showBadgeWhenLow,
     listMarks: previous.listMarksEnabled !== next.listMarksEnabled,
     highlights: previous.highlightEnabled !== next.highlightEnabled,
+    consent: previous.analysisConsent !== next.analysisConsent,
   };
 }
 

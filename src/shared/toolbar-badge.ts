@@ -39,6 +39,18 @@ const CLEAR: ToolbarBadgeAppearance = {
   title: DEFAULT_TITLE,
 };
 
+/**
+ * Until the reader agrees to their mail being read, nothing in Gmail is checked, and no in-mail badge
+ * ever appears. Without a mark here that would look exactly like an inbox of clean mail, so the icon
+ * says so on every tab until the welcome page's button is pressed.
+ */
+export const NOT_STARTED: ToolbarBadgeAppearance = {
+  text: 'OFF',
+  background: '#5f6368',
+  textColor: '#ffffff',
+  title: 'ShoutPhish is not checking your mail yet. Click to start.',
+};
+
 const UNREADABLE: ToolbarBadgeAppearance = {
   text: '?',
   background: '#5f6368',

@@ -42,6 +42,25 @@ install (`src/manifest.firefox.json`):
 Firefox also lets you withhold Gmail access itself. The popup then says that ShoutPhish checks nothing,
 and offers to ask again; it never reads that as nothing to check.
 
+## Consent
+
+A new install reads nothing. The content script is injected into Gmail, because the manifest declares it,
+but it starts no observer, reads no message, marks no row and warms no model until `analysisConsent` is
+true. The only control that sets it is the welcome page's **Start checking my mail** button, beside a
+paragraph that says what is read, that it is checked in the browser, and that nothing is kept or sent. The
+options page has the same switch, which is how reading is stopped, and stopping removes everything
+ShoutPhish drew in Gmail and drops what it had read, without a reload.
+
+A Gmail tab cannot set it: the worker accepts only the trust list from a tab, so a page can never agree on
+the reader's behalf. Until it is set, the toolbar icon shows **OFF** on every tab and the popup says
+nothing is being checked, because an inbox with no badges is also what an inbox of clean mail looks like.
+
+Installs from before the setting existed count as having agreed: their stored settings lack the key, and
+they were already reading mail with the welcome page's account of it shown at install. A missing key in
+stored settings is the only thing read that way; a fresh install has no stored settings and gets `false`,
+and a value that is present but malformed is `false` too. See
+[ADR 0014](adr/0014-consent-before-reading.md).
+
 ## Where data lives
 
 **Extracted from Gmail**: sender name and address, Reply-To, subject, visible body text (truncated,

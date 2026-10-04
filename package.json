@@ -16,6 +16,7 @@
     "dev": "node scripts/build.mjs --dev --watch",
     "harness": "node scripts/harness.mjs",
     "screenshots": "node scripts/screenshots.mjs",
+    "store:images": "node scripts/store-images.mjs",
     "clean": "node scripts/build.mjs --clean-only",
     "check:dist": "node scripts/check-dist.mjs && node scripts/check-dist.mjs --target=firefox",
     "typecheck": "tsc --noEmit",

@@ -8,8 +8,9 @@
       /*
         Shown once, at install, to a person deciding whether to trust the extension with their mail, so
         every claim is static text they can verify in the page source. The one script (welcome.js) does
-        only the AI choice: saving it, and checking whether Chrome's on-device model is ready. Every other
-        choice lives in the settings page, where it can be revisited.
+        two things: records the reader's agreement to their mail being read, which is the only place that
+        agreement is given, and the AI choice, saving it and checking whether Chrome's on-device model is
+        ready. Every other choice lives in the settings page, where it can be revisited.
       */
       :root {
         color-scheme: light dark;
@@ -258,10 +259,28 @@
       .check-note {
         margin: 12px 0 0;
       }
-      a.button.primary {
+      a.button.primary,
+      button.button.primary {
         background: var(--accent);
         border-color: var(--accent);
         color: #ffffff;
+      }
+      .consent {
+        margin: 36px 0 0;
+        padding: 18px 20px;
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        background: var(--card);
+      }
+      .consent h2 {
+        margin-top: 0;
+      }
+      .consent button {
+        padding: 10px 18px;
+      }
+      #consent-status:not(:empty) {
+        margin: 12px 0 0;
+        font-weight: 500;
       }
       table {
         width: 100%;
@@ -296,10 +315,11 @@
   <body>
     <main>
       <span class="brand">ShoutPhish</span>
-      <h1>Installed. Nothing else to set up.</h1>
+      <h1>Installed. One step before it starts.</h1>
       <p class="lede">
-        Open Gmail and read your mail as usual. Each message you open is checked as it loads, and a small
-        badge appears beside the sender with what was found.
+        ShoutPhish has not read anything yet. Below is what it does with your mail; if that is fine with
+        you, choose <strong>Start checking my mail</strong>. From then on, each message you open in Gmail
+        is checked as it loads, and a small badge appears beside the sender with what was found.
       </p>
 
       <div class="badges">
@@ -348,6 +368,21 @@
           </tr>
         </tbody>
       </table>
+
+      <section class="consent" aria-labelledby="consent-heading">
+        <h2 id="consent-heading">Start checking your mail</h2>
+        <p>
+          When you choose Start, ShoutPhish reads each Gmail message you open: who sent it, where replies
+          go and who it was sent to, the subject, the text, the links, the names of attachments, who sent the earlier messages in
+          the conversation, and Gmail's own details about how it was sent. If
+          you later turn on inbox marks, it also reads the sender shown on each row of your inbox. It
+          checks them inside this browser for signs of phishing, keeps none of it, and sends none of it
+          anywhere, unless you choose an AI option further down that says otherwise. You can stop at any
+          time in Settings.
+        </p>
+        <button type="button" class="button primary" id="consent-start">Start checking my mail</button>
+        <p id="consent-status" role="status" aria-live="polite"></p>
+      </section>
 
       <h2>Optional: add an AI reading</h2>
       <p>

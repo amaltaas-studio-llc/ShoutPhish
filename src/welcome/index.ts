@@ -1,5 +1,6 @@
 /**
- * The welcome page's one choice: whether to use AI, and if Chrome's model, whether it is ready yet.
+ * The welcome page's two choices: agreeing to mail being read, and whether to use AI (and if Chrome's
+ * model, whether it is ready yet).
  *
  * Everything else on the page is static HTML that makes its claims in the page source. The wording is in
  * `guidance.ts`, which is pure and tested; this file is the wiring.
@@ -46,6 +47,8 @@ class WelcomePage {
   readonly #status = requireElement('mode-status', HTMLParagraphElement);
   readonly #localInput = this.#modeInputs.find((input) => input.value === 'local') ?? null;
   readonly #localUnavailable = requireElement('local-unavailable', HTMLSpanElement);
+  readonly #consentStart = requireElement('consent-start', HTMLButtonElement);
+  readonly #consentStatus = requireElement('consent-status', HTMLParagraphElement);
   #mode: AiMode = 'off';
   #poll: ReturnType<typeof setTimeout> | undefined;
   /** Progress text while this page's own download runs; the probe would only say "downloading". */
@@ -61,11 +64,36 @@ class WelcomePage {
         if (input.checked && isAiMode(input.value)) void this.#choose(input.value);
       });
     }
+    this.#consentStart.addEventListener('click', () => {
+      void this.#consent();
+    });
     // Coming back from Chrome's settings is when the answer is most likely to have changed.
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') void this.#refresh();
     });
-    this.#show((await requestSettings()).aiMode);
+    const settings = await requestSettings();
+    this.#showConsent(settings.analysisConsent);
+    this.#show(settings.aiMode);
+  }
+
+  async #consent(): Promise<void> {
+    this.#consentStart.disabled = true;
+    const response = await sendMessage({ type: 'SET_SETTINGS', patch: { analysisConsent: true } });
+    if (response === null || !response.ok || response.type !== 'SETTINGS') {
+      this.#consentStart.disabled = false;
+      this.#consentStatus.textContent = 'Could not save that. Try again.';
+      return;
+    }
+    this.#showConsent(response.settings.analysisConsent);
+  }
+
+  #showConsent(agreed: boolean): void {
+    this.#consentStart.hidden = agreed;
+    this.#consentStart.disabled = false;
+    // Gmail tabs already open start on their own: they listen for this setting changing.
+    this.#consentStatus.textContent = agreed
+      ? 'ShoutPhish is checking the messages you open in Gmail. You can stop it in Settings.'
+      : '';
   }
 
   async #choose(mode: AiMode): Promise<void> {

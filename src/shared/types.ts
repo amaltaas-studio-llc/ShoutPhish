@@ -331,6 +331,15 @@ export interface SemanticAnalyzer {
 export type AiMode = 'off' | 'local' | 'cloud' | 'server';
 
 export interface Settings {
+  /**
+   * Whether the reader has agreed to ShoutPhish reading the messages they open.
+   *
+   * False on a new install, and nothing in Gmail is read until it is true: the welcome page says what
+   * is read and why, and only its button sets this. A tab cannot set it (`TAB_WRITABLE_SETTINGS`), so a
+   * page can never consent on the reader's behalf. Installs from before the setting existed count as
+   * having agreed; see `normalizeSettings`.
+   */
+  analysisConsent: boolean;
   /** Default is `off`. Neither network mode is ever the default. */
   aiMode: AiMode;
   /**

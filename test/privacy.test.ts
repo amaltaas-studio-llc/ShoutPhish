@@ -115,12 +115,27 @@ describe('normalizeSettings', () => {
     expect(fresh.listMarksEnabled).toBe(false);
   });
 
+  /**
+   * A new install has nothing in storage, and reads no mail until the welcome page's button is pressed.
+   * Stored settings without the key predate consent and were already reading mail, so they count as
+   * agreed; a stored `false` is a choice, and is kept.
+   */
+  it('reads no mail on a new install until the reader agrees', () => {
+    expect(normalizeSettings(undefined).analysisConsent).toBe(false);
+    expect(DEFAULT_SETTINGS.analysisConsent).toBe(false);
+    expect(normalizeSettings({ aiMode: 'local' }).analysisConsent).toBe(true);
+    expect(normalizeSettings({ analysisConsent: false }).analysisConsent).toBe(false);
+    expect(normalizeSettings({ analysisConsent: 'yes' }).analysisConsent).toBe(false);
+    expect(normalizeSettings([]).analysisConsent).toBe(false);
+  });
+
   it('ignores unknown keys instead of carrying them forward', () => {
     const normalized = normalizeSettings({ aiMode: 'off', apiKey: 'sk-secret', debug: true });
     expect(Object.keys(normalized).sort()).toEqual(
       [
         'aiMode',
         'aiOnlyWhenFlagged',
+        'analysisConsent',
         'backendBaseUrl',
         'highlightEnabled',
         'listMarksEnabled',

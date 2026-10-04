@@ -180,19 +180,23 @@ or in other email programs.
 3. Type `chrome://extensions` into Chrome's address bar, or `edge://extensions` into Edge's, and switch on
    **Developer mode** (top right in Chrome, in the left-hand panel in Edge).
 4. Click **Load unpacked** and choose the unzipped folder, the one containing `manifest.json`.
-5. Open or refresh Gmail and open an email you received. Look for the badge beside the sender. 🎉
+5. A welcome page opens and explains what ShoutPhish reads. If you are happy with it, click
+   **Start checking my mail**.
+6. Open or refresh Gmail and open an email you received. Look for the badge beside the sender. 🎉
 
 **In Firefox:**
 
 1. From the same **[latest release](https://github.com/amaltaas-studio-llc/ShoutPhish/releases/latest)**,
    download `shoutphish-firefox-<version>.xpi`.
 2. Type `about:addons` into the address bar, click the gear icon, and choose **Install Add-on From File**.
-3. Choose the downloaded file and click **Add** when Firefox asks, then open or refresh Gmail.
+3. Choose the downloaded file and click **Add** when Firefox asks.
+4. On the welcome page that opens, click **Start checking my mail**, then open or refresh Gmail.
 
 The Firefox download is signed by Mozilla, so it stays installed when Firefox restarts. It is not listed in
 Mozilla's add-on store, which is why it comes from the release page instead.
 
-Nothing else to configure: every core check works straight away. Pin ShoutPhish from the browser's
+ShoutPhish reads nothing until you click that button, and the toolbar icon says **OFF** until then. After
+that there is nothing else to configure: every core check works straight away. Pin ShoutPhish from the browser's
 Extensions menu (the puzzle-piece icon) to keep its score and settings one click away.
 
 <details>
@@ -277,7 +281,9 @@ anything up. By default it is only asked when a check has already found somethin
 
 <br>
 
-Refresh Gmail after installing, and open a message you *received*; your own sent replies are not scored.
+If the ShoutPhish toolbar icon says **OFF**, it has not been started yet: click it, then
+**See what it reads and start**. Otherwise, refresh Gmail after installing, and open a message you
+*received*; your own sent replies are not scored.
 Low-risk badges may be switched off in Settings. Click the ShoutPhish toolbar icon to see what it is doing
 on the current tab.
 
@@ -330,6 +336,7 @@ For the technically curious, and anyone deciding whether to trust an extension w
 | Document | What is in it |
 | :--- | :--- |
 | [Detection and scoring](docs/DETECTION.md) | Every category of check, how the 0–100 score is assembled, and how false alarms are held down. |
+| [Privacy policy](PRIVACY-POLICY.md) | What ShoutPhish reads, keeps and sends, in plain words. |
 | [Privacy and security](docs/PRIVACY.md) | Permissions, exactly what data exists and where, and the threat model. |
 | [Local AI](docs/LOCAL-AI.md) | The on-device model, connecting your own, and what a model is allowed to do. |
 | [Development](docs/DEVELOPMENT.md) | Building, testing, the UI harness, project layout and releases. |

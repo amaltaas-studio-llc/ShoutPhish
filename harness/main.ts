@@ -355,7 +355,7 @@ async function viewFor(state: HarnessState): Promise<PanelView> {
  * nothing in the corpus is designed to reach) is simply left out. A hardcoded list would quietly start
  * lying the day a fixture's score moved across a threshold.
  */
-async function renderBadges(semantic: SemanticStatus): Promise<void> {
+async function renderBadges(semantic: SemanticStatus, corpus: readonly Fixture[]): Promise<void> {
   if (stage === null) return;
   panel.close();
   const rows = el('div', { class: 'rows' });
@@ -363,7 +363,7 @@ async function renderBadges(semantic: SemanticStatus): Promise<void> {
 
   const scored = await Promise.all(
     // The badge shows a score, which no mode changes, so this view is deliberately mode-agnostic.
-    fixtures.map(async (fixture) => ({
+    corpus.map(async (fixture) => ({
       fixture,
       result: await resultFor(fixture.email, semantic, 'local'),
     })),
@@ -403,12 +403,12 @@ async function renderBadges(semantic: SemanticStatus): Promise<void> {
  * is to exercise the same selectors that run against Gmail, so a candidate list that has gone stale shows
  * up here as a missing mark.
  */
-function renderList(): void {
+function renderList(corpus: readonly Fixture[]): void {
   if (stage === null) return;
   panel.close();
   listMarks.stop();
 
-  const rows = fixtures.map((fixture) => {
+  const rows = corpus.map((fixture) => {
     const email = fixture.email;
     return el('tr', {
       class: 'zA',
@@ -549,11 +549,19 @@ async function render(): Promise<void> {
   // would otherwise stay attached to a stage it no longer owns.
   if (view !== 'list') listMarks.stop();
 
-  if (view === 'badges') await renderBadges(semantic);
+  // `fixtures=a,b,c` narrows the multi-message views, in that order. Store images use it to show only
+  // invented organisations, since a listing whose screenshots name real brands reads as an endorsement.
+  const only = params.get('fixtures')?.split(',');
+  const corpus =
+    only === undefined
+      ? fixtures
+      : only.flatMap((name) => fixtures.filter((f) => f.name === name));
+
+  if (view === 'badges') await renderBadges(semantic, corpus);
   // `card` shows the card alone on an empty page. It stays pinned bottom-right as it is in Gmail, so
   // sizing the window to the card crops to it exactly without any screenshot post-processing.
   else if (view === 'card') await renderCardOnly(state);
-  else if (view === 'list') renderList();
+  else if (view === 'list') renderList(corpus);
   else await renderFull(state);
 }
 

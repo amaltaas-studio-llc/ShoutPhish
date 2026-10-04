@@ -20,6 +20,7 @@ const OPTIONS_SENDER = { id: EXTENSION_ID, url: `${EXTENSION_ORIGIN}options.html
 type Listener = (message: unknown, sender: unknown, respond: (r: ExtensionResponse) => void) => boolean;
 
 let listener: Listener | undefined;
+let onStartup: (() => void) | undefined;
 let stored: Record<string, unknown> = {};
 let granted = new Set<string>();
 const badge = {
@@ -45,8 +46,10 @@ beforeAll(async () => {
       getURL: (path: string) => `${EXTENSION_ORIGIN}${path}`,
       onMessage: { addListener: (fn: Listener) => (listener = fn) },
       onInstalled: { addListener: () => undefined },
+      onStartup: { addListener: (fn: () => void) => (onStartup = fn) },
     },
     storage: {
+      onChanged: { addListener: () => undefined },
       sync: {
         get: (key: string) => Promise.resolve({ [key]: stored[key] }),
         set: (items: Record<string, unknown>) => {
@@ -113,6 +116,8 @@ describe('who may change which settings', () => {
       { modelBaseUrl: 'https://collector.example/v1' },
       { backendBaseUrl: 'https://collector.example' },
       { trustedSenders: ['a@northwind-logistics.com'], aiMode: 'cloud' },
+      // A page in Gmail must never be able to agree, on the reader's behalf, to its mail being read.
+      { analysisConsent: true },
     ]) {
       const response = await send({ type: 'SET_SETTINGS', patch }, GMAIL_SENDER);
       expect(response.ok, JSON.stringify(patch)).toBe(false);
@@ -131,6 +136,37 @@ describe('who may change which settings', () => {
   it('rejects a message from another extension outright', async () => {
     const response = await send({ type: 'GET_SETTINGS' }, { id: 'someone-else' });
     expect(response.ok).toBe(false);
+  });
+});
+
+/**
+ * Without consent no content script reads anything, so no in-mail badge ever appears, which is also what
+ * an inbox of clean mail looks like. The icon's `OFF` is what tells the two apart.
+ */
+describe('the toolbar before consent', () => {
+  async function startBrowser(): Promise<void> {
+    onStartup?.();
+    await vi.waitFor(() => {
+      expect(badge.setBadgeText).toHaveBeenCalled();
+    });
+  }
+
+  it('marks every tab OFF on a fresh install', async () => {
+    await startBrowser();
+    expect(badge.setBadgeText).toHaveBeenCalledWith({ text: 'OFF' });
+  });
+
+  it('clears the mark once the reader has agreed', async () => {
+    stored[STORAGE_KEY] = { ...DEFAULT_SETTINGS, analysisConsent: true };
+    await startBrowser();
+    expect(badge.setBadgeText).toHaveBeenCalledWith({ text: '' });
+  });
+
+  it('treats settings saved before consent existed as agreed, so an update does not switch it off', async () => {
+    const { analysisConsent: _omitted, ...older } = DEFAULT_SETTINGS;
+    stored[STORAGE_KEY] = older;
+    await startBrowser();
+    expect(badge.setBadgeText).toHaveBeenCalledWith({ text: '' });
   });
 });
 

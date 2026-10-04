@@ -62,6 +62,13 @@ direction this project does not accept. Do not "fix" that by scoring it anyway, 
 (indistinguishable from a clean message when `showBadgeWhenLow` is off), or by softening the card's
 wording: the sentence saying this is not a judgement of safety is load-bearing and is asserted by a test.
 
+**Nothing is read before consent.** Until `analysisConsent` is true the content script registers its
+listeners and does nothing else: no observer, no list marks, no model warm-up. Only the welcome page's
+button turns it on, beside the paragraph saying what is read. Keep it out of `TAB_WRITABLE_SETTINGS`, and
+keep the toolbar's `OFF` and the popup's `not-started` state, because an unstarted install otherwise looks
+like a clean inbox. New reading of Gmail goes inside `#startReading`. See
+[docs/adr/0014](docs/adr/0014-consent-before-reading.md).
+
 **The model cannot outvote the checks.** The `llm` category is capped at 15 points, contributes additively,
 and scores zero when no deterministic signal corroborates it. It cannot remove a finding, lower a score
 past a deterministic floor, or change a classification on its own. If a change would let it, the change is

@@ -91,6 +91,20 @@ describe('headline', () => {
     expect(findingsLine({ kind: 'no-gmail-access' })).toBeNull();
   });
 
+  /**
+   * Before consent nothing is checked anywhere, and an inbox without badges is also what clean mail looks
+   * like. The popup is where someone goes to find out which of the two they are looking at.
+   */
+  it('says plainly that nothing is checked before the reader has started it', () => {
+    const head = headline({ kind: 'not-started' });
+    expect(head.tone).toBe('unknown');
+    expect(head.score).toBe('');
+    expect(head.note).toMatch(/not checking your mail/i);
+    expect(head.label).not.toBe(headline({ kind: 'no-message' }).label);
+    expect(cardButtonLabel({ kind: 'not-started' })).toBeNull();
+    expect(findingsLine({ kind: 'not-started' })).toBeNull();
+  });
+
   it('offers no verdict glyph where there is no verdict', () => {
     for (const kind of ['not-gmail', 'no-message', 'pending'] as const) {
       expect(headline({ kind }).glyph).toBe('');
@@ -283,6 +297,7 @@ describe('reportRow', () => {
   });
 
   it.each([
+    { kind: 'not-started' } as const,
     { kind: 'not-gmail' } as const,
     { kind: 'no-gmail-access' } as const,
     { kind: 'unreachable' } as const,

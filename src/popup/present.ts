@@ -27,9 +27,14 @@ import { formatList } from '../shared/text.js';
  * `no-gmail-access` exists because the user can withhold the Gmail host permission (Firefox asks for it
  * separately, and Chrome's site-access menu can restrict it). Without it the popup cannot even read the
  * tab's address, so it would otherwise say "only runs on Gmail" to someone looking at Gmail.
+ *
+ * `not-started` is decided from settings before any tab is asked, and outranks every other state: until
+ * the reader has agreed to their mail being read, nothing is checked anywhere, and a tab answering
+ * "no message open" would hide that.
  */
 export type PopupState =
   | TabStatus
+  | { kind: 'not-started' }
   | { kind: 'not-gmail' }
   | { kind: 'no-gmail-access' }
   | { kind: 'unreachable' };
@@ -71,6 +76,15 @@ function describeParts(missing: readonly MessagePart[]): string {
 
 export function headline(state: PopupState): Headline {
   switch (state.kind) {
+    case 'not-started':
+      // `unknown` rather than `idle`: an inbox with no badges on it is what clean mail looks like too.
+      return {
+        glyph: UNREADABLE_GLYPH,
+        label: 'Not started',
+        score: '',
+        tone: 'unknown',
+        note: 'ShoutPhish is not checking your mail yet. See what it reads, then choose Start.',
+      };
     case 'not-gmail':
       return {
         glyph: '',
@@ -241,7 +255,12 @@ export interface ReportRow {
  * cannot tell whether their mail is in it has no way to decide whether to attach it to a public issue.
  */
 export function reportRow(state: PopupState): ReportRow | null {
-  if (state.kind === 'not-gmail' || state.kind === 'no-gmail-access' || state.kind === 'unreachable') {
+  if (
+    state.kind === 'not-started' ||
+    state.kind === 'not-gmail' ||
+    state.kind === 'no-gmail-access' ||
+    state.kind === 'unreachable'
+  ) {
     return null;
   }
 
@@ -308,6 +327,10 @@ export function aiRow(settings: Settings, state: PopupState): AiRow {
 
   if (settings.aiMode === 'off') {
     return { label, detail: STATUS_TEXT.off, testable: false, fix: null };
+  }
+
+  if (state.kind === 'not-started') {
+    return { label, detail: 'Not used until ShoutPhish is started', testable, fix: null };
   }
 
   if (settings.aiMode === 'server' && !testable) {

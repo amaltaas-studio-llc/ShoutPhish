@@ -32,7 +32,7 @@ import { GmailObserver, type ObserverEvent } from '../gmail/observer.js';
 import { logger } from '../shared/logger.js';
 import { isTabRequest, requestSettings, sendMessage, type TabResponse, type TabStatus } from '../shared/messaging.js';
 import { DEFAULT_SETTINGS, settingsImpact } from '../shared/settings.js';
-import { toolbarBadgeAppearance } from '../shared/toolbar-badge.js';
+import { NOT_STARTED, toolbarBadgeAppearance } from '../shared/toolbar-badge.js';
 import { trustState, withTrustedSender, withoutTrustedSender } from '../shared/trust.js';
 import type {
   AnalysisResult,
@@ -147,14 +147,36 @@ export class Controller {
       return;
     }
     this.#settings = settings;
-    this.#settings = settings;
-    logger.info('starting', { aiMode: this.#settings.aiMode, adapter: this.#adapter.id });
+    logger.info('starting', {
+      aiMode: this.#settings.aiMode,
+      adapter: this.#adapter.id,
+      consent: this.#settings.analysisConsent,
+    });
 
+    // Listening is not reading: these are how consent given on the welcome page reaches an open tab,
+    // which then starts without being reloaded.
     chrome.storage.onChanged.addListener(this.#handleStorageChanged);
     chrome.runtime.onMessage.addListener(this.#handleTabRequest);
+    if (this.#settings.analysisConsent) this.#startReading();
+  }
+
+  /**
+   * Everything that reads Gmail, started only once the reader has agreed to it: the open message, the
+   * list rows, and the on-device model that would be asked about them.
+   */
+  #startReading(): void {
     this.#observer.start();
     this.#applyListMarks();
     this.#warmModel();
+  }
+
+  /** Consent withdrawn: forget what was read and stop reading, leaving nothing on the page. */
+  #stopReading(): void {
+    this.#observer.stop();
+    this.#listMarks.stop();
+    this.#teardownView();
+    this.#readings.clear();
+    this.#syncToolbarBadge();
   }
 
   stop(): void {
@@ -414,9 +436,10 @@ export class Controller {
    * must not delay scoring. Appearance is computed here so the worker stays a dumb applicator.
    */
   #syncToolbarBadge(): void {
-    const appearance = toolbarBadgeAppearance(this.#status(), {
-      showBadgeWhenLow: this.#settings.showBadgeWhenLow,
-    });
+    // A tab's own paint hides the worker's `OFF` default, so a tab that has stopped reading repeats it.
+    const appearance = this.#settings.analysisConsent
+      ? toolbarBadgeAppearance(this.#status(), { showBadgeWhenLow: this.#settings.showBadgeWhenLow })
+      : NOT_STARTED;
     void sendMessage({ type: 'SET_TOOLBAR_BADGE', ...appearance });
   }
 
@@ -553,7 +576,7 @@ export class Controller {
    * and that cost would otherwise land on the first message opened. Fire-and-forget.
    */
   #warmModel(): void {
-    if (this.#stopped || this.#settings.aiMode !== 'local') return;
+    if (this.#stopped || !this.#settings.analysisConsent || this.#settings.aiMode !== 'local') return;
     void localAnalyzer().warmUp();
   }
 
@@ -581,6 +604,13 @@ export class Controller {
     logger.debug('settings reloaded', { aiMode: this.#settings.aiMode });
 
     const impact = settingsImpact(previous, this.#settings);
+
+    if (impact.consent) {
+      if (this.#settings.analysisConsent) this.#startReading();
+      else this.#stopReading();
+      return;
+    }
+    if (!this.#settings.analysisConsent) return;
 
     if (impact.rescore) {
       // A late answer must not repaint a view assessed under different settings.
@@ -625,7 +655,7 @@ export class Controller {
    * Stopping removes every mark, so turning the setting off leaves nothing behind to explain.
    */
   #applyListMarks(): void {
-    if (this.#stopped || !this.#settings.listMarksEnabled) {
+    if (this.#stopped || !this.#settings.analysisConsent || !this.#settings.listMarksEnabled) {
       this.#listMarks.stop();
       return;
     }

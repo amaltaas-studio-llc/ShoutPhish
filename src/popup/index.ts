@@ -69,6 +69,7 @@ class Popup {
   readonly #more = requireElement('more', HTMLParagraphElement);
   readonly #openCard = requireElement('openCard', HTMLButtonElement);
   readonly #grantGmail = requireElement('grantGmail', HTMLButtonElement);
+  readonly #start = requireElement('start', HTMLButtonElement);
   readonly #aiLabel = requireElement('aiLabel', HTMLSpanElement);
   readonly #aiDetail = requireElement('aiDetail', HTMLSpanElement);
   readonly #aiFix = requireElement('aiFix', HTMLParagraphElement);
@@ -124,6 +125,14 @@ class Popup {
         });
     });
 
+    // To the welcome page rather than consenting here: agreement is given beside the full account of
+    // what is read, and a popup too small to hold it is not where that should happen.
+    this.#start.addEventListener('click', () => {
+      void chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') }).then(() => {
+        window.close();
+      });
+    });
+
     this.#test.addEventListener('click', () => {
       void this.#testConnection();
     });
@@ -141,6 +150,10 @@ class Popup {
     });
 
     const [settings, tab] = await Promise.all([requestSettings(), this.#readState()]);
+    if (!settings.analysisConsent) {
+      this.#render(settings, { kind: 'not-started' }, null);
+      return;
+    }
     this.#render(settings, tab.state, tab.health);
   }
 
@@ -175,6 +188,7 @@ class Popup {
     this.#openCard.textContent = cardLabel ?? '';
     this.#openCard.hidden = cardLabel === null;
     this.#grantGmail.hidden = state.kind !== 'no-gmail-access';
+    this.#start.hidden = state.kind !== 'not-started';
 
     const ai = aiRow(settings, state);
     this.#aiLabel.textContent = ai.label;

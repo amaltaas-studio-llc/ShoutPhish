@@ -32,6 +32,7 @@ npm run clean        # remove dist/
 
 npm run harness      # UI harness on http://127.0.0.1:5199 (see below)
 npm run screenshots  # regenerate docs/assets/ from the harness
+npm run store:images # Chrome Web Store images into store-assets/ (see docs/STORE-LISTING.md)
 npm run eval -- <path>...  # score a corpus of stored mail (see "Measuring against real mail")
 npm run eval:prompts # export paired prompt requests for a real-model comparison; contacts nothing
 
@@ -147,6 +148,11 @@ npm run screenshots  # in another
 stack is a large amount of supply chain to own for a dozen PNGs) and overwrites `docs/assets/`. Set
 `CHROME_PATH` if Chrome is somewhere unusual. Because the images are renders of the shipping components, a
 UI change is one command away from being reflected in the README instead of silently outdating it.
+
+`npm run store:images`, against the same running harness, renders the Chrome Web Store screenshots and
+promo tiles into `store-assets/`, which is not committed. Each screenshot frames the live harness beside
+a sentence, and shows only invented organisations: a famous brand in store images reads as a claim of
+association. Which file goes in which dashboard field is in [STORE-LISTING.md](STORE-LISTING.md).
 
 ## Testing
 

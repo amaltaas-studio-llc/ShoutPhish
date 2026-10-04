@@ -11,7 +11,8 @@
  *   2. the only place the extension opens a socket: the inert cloud path, and a model server the user
  *      runs themselves
  *   3. seeding defaults on install
- *   4. painting the toolbar icon badge for the tab that asked (content scripts cannot call `chrome.action`)
+ *   4. painting the toolbar icon badge for the tab that asked (content scripts cannot call `chrome.action`),
+ *      and the `OFF` default every tab shows until the reader agrees to their mail being read
  *
  * Egress lives here rather than in the content script so that there is one file to audit for it, and so
  * that a Gmail page's execution context never holds the ability to make requests. Every endpoint is
@@ -39,6 +40,7 @@ import {
   originPattern,
 } from '../shared/settings.js';
 import { egressPermissions } from '../shared/egress-permissions.js';
+import { NOT_STARTED } from '../shared/toolbar-badge.js';
 import { BUILD_TARGET } from '../shared/target.js';
 import { truncate } from '../shared/text.js';
 import type { Settings } from '../shared/types.js';
@@ -456,11 +458,44 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse): b
   return true;
 });
 
+/**
+ * Paints the icon's default for every tab: `OFF` until the reader has agreed to their mail being read.
+ *
+ * The default rather than a per-tab paint, because without consent no content script is checking
+ * anything and so none will paint its own tab. A Gmail tab's own paint overrides this once it starts.
+ * The global badge does not survive a browser restart, hence the repaint on startup.
+ */
+async function paintConsentBadge(): Promise<void> {
+  const { analysisConsent } = await readSettings();
+  try {
+    if (analysisConsent) {
+      await chrome.action.setBadgeText({ text: '' });
+      await chrome.action.setTitle({ title: 'ShoutPhish' });
+      return;
+    }
+    await chrome.action.setBadgeText({ text: NOT_STARTED.text });
+    await chrome.action.setTitle({ title: NOT_STARTED.title });
+    await chrome.action.setBadgeBackgroundColor({ color: NOT_STARTED.background });
+    await chrome.action.setBadgeTextColor({ color: NOT_STARTED.textColor });
+  } catch (error) {
+    logger.debug('could not paint the consent badge', error);
+  }
+}
+
+chrome.runtime.onStartup.addListener(() => {
+  void paintConsentBadge();
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && STORAGE_KEY in changes) void paintConsentBadge();
+});
+
 chrome.runtime.onInstalled.addListener((details) => {
   void (async () => {
     // Seed defaults without overwriting anything the user has already chosen.
     const settings = await writeSettings({});
     logger.info('installed', { reason: details.reason, aiMode: settings.aiMode });
+    await paintConsentBadge();
 
     /*
      * A first install is the one moment the extension has something to say: it works only on Gmail, in a
