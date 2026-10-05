@@ -4,7 +4,7 @@
 
 <br>
 
-<a href="https://github.com/amaltaas-studio-llc/ShoutPhish/releases/latest"><img alt="Download the latest release" src="https://img.shields.io/github/v/release/amaltaas-studio-llc/ShoutPhish?label=download&color=6366f1&style=for-the-badge"></a>
+<a href="https://chromewebstore.google.com/detail/ShoutPhish/oeacjpdkommpgbfledjboahamejoaeea"><img alt="Get it on the Chrome Web Store" src="https://img.shields.io/chrome-web-store/v/oeacjpdkommpgbfledjboahamejoaeea?label=chrome%20web%20store&color=6366f1&style=for-the-badge"></a>
 <img alt="Works in Chrome and Microsoft Edge, version 120 and later" src="https://img.shields.io/badge/Chrome%20%7C%20Edge-120%2B-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white">
 <img alt="Works in Firefox, version 140 and later" src="https://img.shields.io/badge/Firefox-140%2B-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white">
 <img alt="No network requests in the default configuration" src="https://img.shields.io/badge/uploads-none%20by%20default-3b1f8c?style=for-the-badge">
@@ -168,21 +168,39 @@ An extension that reads your email should be completely clear about what it does
 ## Install in two minutes
 
 **You need:** Gmail on a computer, in Chrome or Microsoft Edge 120 or later, or Firefox 140 or later. Other
-browsers built on the same engine as Chrome, such as Brave, Opera and Vivaldi, should accept the Chrome
-download but are not tested yet. Safari is not supported yet. ShoutPhish does not run in the Gmail phone apps
-or in other email programs.
+browsers built on the same engine as Chrome, such as Brave, Opera and Vivaldi, should install it from the
+Chrome Web Store too but are not tested yet. Safari is not supported yet. ShoutPhish does not run in the
+Gmail phone apps or in other email programs.
 
 **In Chrome or Edge:**
+
+1. Open **[ShoutPhish on the Chrome Web Store](https://chromewebstore.google.com/detail/ShoutPhish/oeacjpdkommpgbfledjboahamejoaeea)**
+   and click **Add to Chrome**. In Edge, first click **Allow extensions from other stores** in the bar at
+   the top of the page.
+2. A welcome page opens and explains what ShoutPhish reads. If you are happy with it, click
+   **Start checking my mail**.
+3. Open or refresh Gmail and open an email you received. Look for the badge beside the sender. 🎉
+
+The browser keeps it up to date by itself.
+
+<details>
+<summary><strong>Installing from the release download instead</strong></summary>
+
+<br>
 
 1. Open the **[latest release](https://github.com/amaltaas-studio-llc/ShoutPhish/releases/latest)** and, under
    **Assets**, download `shoutphish-<version>.zip`. (Not the **Source code** downloads.)
 2. Unzip it into a folder you will keep, for example `Documents\ShoutPhish`.
 3. Type `chrome://extensions` into Chrome's address bar, or `edge://extensions` into Edge's, and switch on
    **Developer mode** (top right in Chrome, in the left-hand panel in Edge).
-4. Click **Load unpacked** and choose the unzipped folder, the one containing `manifest.json`.
-5. A welcome page opens and explains what ShoutPhish reads. If you are happy with it, click
-   **Start checking my mail**.
-6. Open or refresh Gmail and open an email you received. Look for the badge beside the sender. 🎉
+4. Click **Load unpacked** and choose the unzipped folder, the one containing `manifest.json`, then carry
+   on from step 2 above.
+
+An install like this does not update itself. To update, unzip the newer release over the same folder,
+click **Reload** on ShoutPhish at `chrome://extensions` (or `edge://extensions`), then refresh Gmail. To
+switch to the store version, remove this one first, so the browser does not run both.
+
+</details>
 
 **In Firefox:**
 
@@ -190,24 +208,12 @@ or in other email programs.
    **Add to Firefox**.
 2. On the welcome page that opens, click **Start checking my mail**, then open or refresh Gmail.
 
-Firefox keeps it up to date by itself.
+Firefox keeps it up to date by itself. If you installed Firefox's `.xpi` from an earlier release, install
+from Firefox Add-ons once to be sure of updates; it replaces the old version and keeps your settings.
 
 ShoutPhish reads nothing until you click that button, and the toolbar icon says **OFF** until then. After
 that there is nothing else to configure: every core check works straight away. Pin ShoutPhish from the browser's
 Extensions menu (the puzzle-piece icon) to keep its score and settings one click away.
-
-<details>
-<summary><strong>Updating a manual install</strong></summary>
-
-<br>
-
-Download and unzip the newer release over the same folder, click **Reload** on ShoutPhish at
-`chrome://extensions` (or `edge://extensions`), then refresh Gmail. Manual installs do not update
-themselves. If you installed Firefox's `.xpi` from an earlier release, install from
-[Firefox Add-ons](https://addons.mozilla.org/firefox/addon/shoutphish/) once to be sure of updates; it
-replaces the old version and keeps your settings.
-
-</details>
 
 ## Make it yours
 

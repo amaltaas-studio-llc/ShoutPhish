@@ -127,6 +127,11 @@ jobs:
 
           **Chrome or Edge**
 
+          Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/ShoutPhish/oeacjpdkommpgbfledjboahamejoaeea).
+          The browser keeps it up to date. This version reaches the store once Google's review passes.
+
+          To install this release by hand instead:
+
           1. Download `shoutphish-${{ steps.meta.outputs.version }}.zip` below and unzip it.
           2. Open `chrome://extensions` (or `edge://extensions` in Edge) and turn on **Developer mode**.
           3. Choose **Load unpacked** and select the unzipped folder.
