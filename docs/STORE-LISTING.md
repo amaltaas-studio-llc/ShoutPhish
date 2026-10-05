@@ -55,14 +55,15 @@ ShoutPhish is not affiliated with Google. It is a second opinion, not a guarante
 **Category:** Privacy & Security. **Language:** English.
 
 **Images**, from `npm run build`, `npm run harness`, then `npm run store:images`, written to
-`store-assets/`. The dashboard takes new images at any time, without a new version:
+`store-assets/chrome/`. The dashboard takes new images at any time, but changing them sends the listing
+back for review:
 
 | Dashboard field | File |
 | --- | --- |
 | Store icon (128×128) | `dist/icons/icon128.png` |
-| Screenshots (1280×800, up to 5, in this order) | `1-explained.png` … `5-consent.png` |
-| Small promo tile (440×280) | `tile-small.png` |
-| Marquee promo tile (1400×560, optional) | `tile-marquee.png` |
+| Screenshots (1280×800, up to 5, in this order) | `store-assets/chrome/1-explained.png` … `5-consent.png` |
+| Small promo tile (440×280) | `store-assets/chrome/tile-small.png` |
+| Marquee promo tile (1400×560, optional) | `store-assets/chrome/tile-marquee.png` |
 
 **Official URL:** none (it requires a verified domain). **Homepage URL:**
 `https://github.com/amaltaas-studio-llc/ShoutPhish`. **Support URL:**
@@ -151,9 +152,11 @@ Three things have no field `web-ext` can submit. Set them once in the
 listed version is submitted, before Mozilla's reviewer reaches it:
 
 - **Privacy policy:** paste the text of [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md). AMO hosts the text
-  itself rather than linking to it, so it has to be pasted again whenever that file changes.
-- **Screenshots:** the same five images as the Chrome listing, `store-assets/1-explained.png` …
-  `5-consent.png`. AMO shows them at 1.6:1, which 1280×800 already is.
+  itself rather than linking to it, so it has to be pasted again whenever that file changes. AMO keeps
+  every line break, which is why that file has one line per paragraph and absolute links, unlike the rest
+  of the repository's Markdown.
+- **Screenshots:** `store-assets/firefox/1-explained.png` … `5-consent.png`, in that order, with the
+  slide titles as captions. The same slides as the Chrome listing, at the 2400×1800 AMO recommends.
 - **Support site:** `https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose`.
-
-If the listing shows a generic icon, upload `dist-firefox/icons/icon128.png` on the same page.
+- **Icon:** `dist-firefox/icons/icon128.png`. AMO does not take the listing icon from the package, so
+  until one is uploaded the page shows a generic puzzle piece.

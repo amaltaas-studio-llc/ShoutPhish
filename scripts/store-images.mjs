@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Renders the Chrome Web Store images into store-assets/ from the UI harness and the built extension.
+ * Renders the store images into store-assets/chrome/ and store-assets/firefox/ from the UI harness and
+ * the built extension.
  *
  *   npm run build         # once, for the welcome page
  *   npm run harness       # in one terminal
@@ -18,7 +19,7 @@
  *
  * Output is not committed: the images are regenerated from the harness whenever the UI changes, exactly
  * like docs/assets/, and uploaded by hand. Same capture method as `screenshots.mjs`, for the reasons given
- * there; at scale 1 and on an opaque page Chrome writes the 24-bit PNG the store asks for.
+ * there; on an opaque page Chrome writes the 24-bit PNG the stores ask for.
  */
 import { spawn } from 'node:child_process';
 import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -84,6 +85,20 @@ const SLIDES = [
   },
 ];
 
+/**
+ * One set per store, since each wants its own shape. The Chrome Web Store accepts exactly 1280x800 or
+ * 640x400. addons.mozilla.org gives 2400x1800 as both its maximum and its recommendation, so its set is
+ * laid out at 1200x900 and rendered at twice the density, which keeps the framed UI at the size it ships
+ * at rather than shrinking it on a larger canvas.
+ */
+const STORES = [
+  { dir: 'chrome', width: 1280, height: 800, scale: 1, stackWide: false, tiles: true },
+  { dir: 'firefox', width: 1200, height: 900, scale: 2, stackWide: true, tiles: false },
+];
+
+/** On a 4:3 canvas, a frame wider than this leaves too little room for the copy beside it. */
+const SIDE_BY_SIDE_MAX_FRAME = 640;
+
 /** Space kept around a section fitted into its frame, in CSS pixels. */
 const FIT_MARGIN = 24;
 const BACKGROUND = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #5b21b6 100%)';
@@ -99,8 +114,9 @@ function escape(text) {
   return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
 
-function slideHtml(slide) {
+function slideHtml(slide, store) {
   const { width, height } = slide.frame;
+  const stacked = store.stackWide && width > SIDE_BY_SIDE_MAX_FRAME;
   const src = slide.page === undefined ? harnessUrl(slide.query) : pathToFileURL(slide.page.file).href;
   const content = `<iframe src="${escape(src)}" width="${width}" height="${height}"></iframe>`;
   // An anchor would put the section flush against the frame's top edge and cut whatever follows it, so
@@ -122,16 +138,19 @@ function slideHtml(slide) {
 <html><head><meta charset="utf-8"><style>
   /* Matching the framed page's scheme, or Chrome paints an opaque backdrop behind the transparent card. */
   :root { color-scheme: ${slide.dark === true ? 'dark' : 'light'}; }
-  html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+  html, body { margin: 0; width: ${String(store.width)}px; height: ${String(store.height)}px; overflow: hidden; }
   body { background: ${BACKGROUND}; font-family: ${FONT}; display: flex; align-items: center; gap: 56px; padding: 0 64px; box-sizing: border-box; }
+  body.stacked { flex-direction: column; justify-content: center; gap: 48px; }
   .copy { flex: 1 1 0; color: #ffffff; }
+  .stacked .copy { flex: 0 0 auto; max-width: 880px; text-align: center; }
+  .stacked .brand { justify-content: center; }
   .brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; color: #e0e7ff; margin-bottom: 28px; }
   .brand img { width: 40px; height: 40px; }
   h1 { font-size: 44px; line-height: 1.15; letter-spacing: -0.5px; margin: 0 0 20px; }
   p { font-size: 22px; line-height: 1.45; color: #e0e7ff; margin: 0; }
   .shot { flex: 0 0 auto; background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
   iframe { border: 0; display: block; }
-</style></head><body>
+</style></head><body${stacked ? ' class="stacked"' : ''}>
   <div class="copy">
     <div class="brand"><img src="${escape(pathToFileURL(path.join(root, 'assets/icons/icon128.png')).href)}" alt="">ShoutPhish</div>
     <h1>${escape(slide.title)}</h1>
@@ -198,17 +217,17 @@ function run(command, args) {
   });
 }
 
-async function capture(chrome, work, name, html, width, height, dark = false) {
-  const page = path.join(work, `${name}.html`);
+async function capture(chrome, work, file, html, width, height, { dark = false, scale = 1 } = {}) {
+  const page = path.join(work, `${file.replaceAll(/[\\/]/g, '-')}.html`);
   await writeFile(page, html);
   const profile = await mkdtemp(path.join(tmpdir(), 'shoutphish-store-'));
   try {
     await run(chrome, [
       '--headless=new',
-      `--screenshot=${path.join(outDir, name)}`,
+      `--screenshot=${path.join(outDir, file)}`,
       `--window-size=${String(width)},${String(height)}`,
       '--hide-scrollbars',
-      '--force-device-scale-factor=1',
+      `--force-device-scale-factor=${String(scale)}`,
       '--virtual-time-budget=4000',
       // The slides are file:// pages framing the http harness and reading the repository's own images.
       '--allow-file-access-from-files',
@@ -219,7 +238,7 @@ async function capture(chrome, work, name, html, width, height, dark = false) {
       ...(dark ? ['--force-dark-mode', '--blink-settings=preferredColorScheme=0'] : ['--blink-settings=preferredColorScheme=1']),
       pathToFileURL(page).href,
     ]);
-    console.log(`  ${name.padEnd(20)} ${String(width)}x${String(height)}`);
+    console.log(`  ${file.padEnd(28)} ${String(width * scale)}x${String(height * scale)}`);
   } finally {
     await rm(profile, { recursive: true, force: true });
   }
@@ -241,16 +260,26 @@ for (const slide of SLIDES) {
 }
 
 await rm(outDir, { recursive: true, force: true });
-await mkdir(outDir, { recursive: true });
 const work = await mkdtemp(path.join(tmpdir(), 'shoutphish-store-pages-'));
 try {
   console.log(`\nRendering store images from ${base}:\n`);
-  for (const slide of SLIDES) {
-    await capture(chrome, work, slide.name, slideHtml(slide), 1280, 800, slide.dark === true);
+  let written = 0;
+  for (const store of STORES) {
+    await mkdir(path.join(outDir, store.dir), { recursive: true });
+    for (const slide of SLIDES) {
+      await capture(chrome, work, `${store.dir}/${slide.name}`, slideHtml(slide, store), store.width, store.height, {
+        dark: slide.dark === true,
+        scale: store.scale,
+      });
+      written++;
+    }
+    if (store.tiles) {
+      await capture(chrome, work, `${store.dir}/tile-small.png`, tileHtml(440, 280, 1), 440, 280);
+      await capture(chrome, work, `${store.dir}/tile-marquee.png`, tileHtml(1400, 560, 2), 1400, 560);
+      written += 2;
+    }
   }
-  await capture(chrome, work, 'tile-small.png', tileHtml(440, 280, 1), 440, 280);
-  await capture(chrome, work, 'tile-marquee.png', tileHtml(1400, 560, 2), 1400, 560);
-  console.log(`\nWrote ${String(SLIDES.length + 2)} images to store-assets/\n`);
+  console.log(`\nWrote ${String(written)} images to store-assets/\n`);
 } finally {
   await rm(work, { recursive: true, force: true });
 }
