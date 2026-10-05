@@ -1,6 +1,6 @@
 {
   "name": "shoutphish",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "private": true,
   "description": "Phishing checks for Gmail that explain every point of the score. Runs in your browser, with no network requests by default.",
   "license": "MIT",
