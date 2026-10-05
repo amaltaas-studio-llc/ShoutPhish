@@ -8,8 +8,8 @@
 # a release whose asset reports a different version than its tag is worse than no release. When the version
 # has already been written by an earlier commit, tag that commit directly rather than bumping again.
 #
-# The notes are the commit subjects since the previous tag, so a subject that would read as nonsense to
-# someone deciding whether to update is a problem to fix in the commit message, not here.
+# The notes are this version's CHANGELOG.md entry, then the commit subjects since the previous tag. A test
+# fails when package.json names a version the changelog has no entry for.
 #
 # Three jobs, because `npm ci` runs the install scripts of every dev dependency. The build job runs them,
 # can only read the repository, and holds no secret. The submit job is the only one given the
@@ -97,15 +97,19 @@ jobs:
           git archive --format=zip --prefix="shoutphish-${version}/" \
             -o "release/shoutphish-source-${version}.zip" "$GITHUB_REF_NAME"
 
-      # Commit subjects only. They lead with an imperative summary of why the change was needed, which is
-      # already the sentence a reader of the release wants; the bodies are for someone reading the history,
-      # not someone deciding whether to update.
+      # The CHANGELOG.md entry leads, and goes to addons.mozilla.org with the listing metadata, because it
+      # is written for someone deciding whether to update. The commit subjects follow for anyone who wants
+      # the detail; their bodies are for someone reading the history.
       - name: Write release notes
         run: |
           set -euo pipefail
+          version='${{ steps.meta.outputs.version }}'
+          node scripts/release-notes.mjs "$version" --amo-metadata=release/amo-metadata.json
           previous="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
           {
-            echo '### What changed'
+            node scripts/release-notes.mjs "$version"
+            echo
+            echo '### Changes'
             echo
             if [ -n "$previous" ]; then
               git log --no-merges --format='- %s' "$previous..${GITHUB_REF_NAME}"
@@ -119,7 +123,7 @@ jobs:
           cat >> release/notes.md <<'NOTES'
           ### Install
 
-          **Firefox 140 or later**
+          **Firefox 142 or later**
 
           Install from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/shoutphish/). Firefox
           keeps it up to date. Each version appears there once Mozilla's review passes, which can be a few
@@ -165,8 +169,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      # Checked out for the lockfile, so `web-ext` is the reviewed version with verified integrity, and for
-      # the listing text in docs/amo-metadata.json, read at the tagged commit.
+      # Checked out for the lockfile, so `web-ext` is the reviewed version with verified integrity. The
+      # listing text comes from the build job: docs/amo-metadata.json at the tagged commit, plus this
+      # version's release notes.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -198,7 +203,7 @@ jobs:
           ./node_modules/.bin/web-ext sign \
             --channel=listed \
             --source-dir=firefox \
-            --amo-metadata=docs/amo-metadata.json \
+            --amo-metadata=release/amo-metadata.json \
             --upload-source-code="release/shoutphish-source-${VERSION}.zip" \
             --approval-timeout=0
 

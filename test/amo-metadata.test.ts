@@ -1,4 +1,6 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -12,6 +14,7 @@ const metadata = JSON.parse(readFileSync(new URL('../docs/amo-metadata.json', im
   version: { license: string; compatibility: string[]; approval_notes: string };
 };
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+  version: string;
   scripts: Record<string, string>;
 };
 const firefoxManifest = JSON.parse(
@@ -43,6 +46,20 @@ describe('the addons.mozilla.org listing', () => {
     expect(metadata.version.compatibility).toEqual(['firefox']);
     expect(Object.keys(metadata.categories)).toEqual(['firefox']);
     expect(metadata.categories['firefox']).toContain('privacy-security');
+  });
+
+  /**
+   * Run as the release workflow runs it, so a version with no entry fails here rather than in the
+   * workflow after the tag is pushed. Short, because it is read by someone deciding whether to update.
+   */
+  it('has release notes for the version being released', () => {
+    const notes = execFileSync(process.execPath, ['scripts/release-notes.mjs', pkg.version], {
+      cwd: fileURLToPath(new URL('..', import.meta.url)),
+      encoding: 'utf8',
+    }).trim();
+    expect(notes.length).toBeGreaterThan(0);
+    expect(notes.length).toBeLessThanOrEqual(400);
+    expect(notes).not.toMatch(/^#/m);
   });
 
   it('tells reviewers a build command that exists', () => {

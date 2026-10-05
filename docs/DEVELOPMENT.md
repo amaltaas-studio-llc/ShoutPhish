@@ -314,6 +314,10 @@ npm version patch      # writes package.json and creates the tag
 git push --follow-tags
 ```
 
+First add a `## <version>` entry to `CHANGELOG.md`: a sentence or two for someone deciding whether to
+update, saying what they will notice rather than how it was done. It is shown on addons.mozilla.org and
+at the top of the GitHub Release, and the test suite fails while the version in `package.json` has none.
+
 `.github/workflows/release.yml` verifies, builds both targets, runs `check:dist` and Mozilla's validator,
 zips `dist/` and `dist-firefox/` separately, submits the Firefox zip to addons.mozilla.org, and publishes a
 GitHub Release carrying the Chromium zip and install instructions for each browser. There is no per-platform
@@ -324,7 +328,7 @@ The Firefox zip goes to addons.mozilla.org's listed channel ([adr/0015](adr/0015
 The job submits and does not wait: the version is listed, signed and delivered to Firefox installs once
 Mozilla's review passes, which can be days after the GitHub Release. The listing text, licence, compatible
 applications and reviewer notes come from `docs/amo-metadata.json` at the tagged commit, so a listing change
-ships with the version it describes. It needs two repository secrets, `AMO_JWT_ISSUER`
+ships with the version it describes; `scripts/release-notes.mjs` adds the version's `CHANGELOG.md` entry. It needs two repository secrets, `AMO_JWT_ISSUER`
 and `AMO_JWT_SECRET`, the "JWT issuer" and "JWT secret" from the API-key page of the account that owns the
 add-on. Each upload carries a `git archive` of the tag, because the bundles are minified and Mozilla's
 reviewers rebuild from source with `npm ci && npm run build:firefox`. Mozilla accepts a version number once,
