@@ -24,8 +24,10 @@ browser.
   sends nothing anywhere, so nothing is required. Connecting a model server sends message text outside the
   browser (another process counts, even on loopback), so that consent is requested on the same Connect
   click as the host permission, and the worker checks both before every request
-  (`src/shared/egress-permissions.ts`). The minimum is Firefox 140 and Firefox for Android 142, the first
-  releases with built-in consent, so no older version needs a consent screen of ShoutPhish's own.
+  (`src/shared/egress-permissions.ts`). The minimum is Firefox 142, the first release with built-in consent on
+  both desktop and Android, so no older version needs a consent screen of ShoutPhish's own. Desktop has
+  it from 140, but the floor covers Android too unless a `gecko_android` key overrides it, and that key
+  lists the add-on for Android on addons.mozilla.org ([0015](0015-firefox-listed-on-amo.md)).
 - `check-dist --target=firefox` pins `browser_specific_settings` to the overlay and forbids a
   `service_worker`; CI also runs Mozilla's `web-ext lint` on the Firefox build.
 - Any browser can withhold the Gmail host permission (Firefox asks for it separately; Chrome's site-access

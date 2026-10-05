@@ -6,7 +6,7 @@
 
 <a href="https://chromewebstore.google.com/detail/ShoutPhish/oeacjpdkommpgbfledjboahamejoaeea"><img alt="Get it on the Chrome Web Store" src="https://img.shields.io/chrome-web-store/v/oeacjpdkommpgbfledjboahamejoaeea?label=chrome%20web%20store&color=6366f1&style=for-the-badge"></a>
 <img alt="Works in Chrome and Microsoft Edge, version 120 and later" src="https://img.shields.io/badge/Chrome%20%7C%20Edge-120%2B-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white">
-<img alt="Works in Firefox, version 140 and later" src="https://img.shields.io/badge/Firefox-140%2B-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white">
+<img alt="Works in Firefox, version 142 and later" src="https://img.shields.io/badge/Firefox-142%2B-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white">
 <img alt="No network requests in the default configuration" src="https://img.shields.io/badge/uploads-none%20by%20default-3b1f8c?style=for-the-badge">
 <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-blue?style=for-the-badge"></a>
 
@@ -167,7 +167,7 @@ An extension that reads your email should be completely clear about what it does
 
 ## Install in two minutes
 
-**You need:** Gmail on a computer, in Chrome or Microsoft Edge 120 or later, or Firefox 140 or later. Other
+**You need:** Gmail on a computer, in Chrome or Microsoft Edge 120 or later, or Firefox 142 or later. Other
 browsers built on the same engine as Chrome, such as Brave, Opera and Vivaldi, should install it from the
 Chrome Web Store too but are not tested yet. Safari is not supported yet. ShoutPhish does not run in the
 Gmail phone apps or in other email programs.

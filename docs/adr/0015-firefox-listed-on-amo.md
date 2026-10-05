@@ -20,9 +20,11 @@ version they first downloaded, detection fixes included.
 - The listing text, the licence, the compatible applications and the notes for reviewers live in
   `docs/amo-metadata.json` and are submitted with every version, so the listing says what the tagged
   commit says. A test checks the fields Mozilla would otherwise reject only after the version is spent.
-- The listing is for desktop Firefox only. The manifest's Android minimum stays, since it marks the first
-  release with built-in data consent, but Gmail's mobile site is markup the selectors were never written
-  for.
+- The listing is for desktop Firefox only, because Gmail's mobile site is markup the selectors were never
+  written for. addons.mozilla.org lists a version for Android whenever the manifest has a `gecko_android`
+  key, whatever compatibility the submission asks for, so the manifest has none. Without it Android
+  inherits the desktop minimum, which is therefore 142 rather than 140: the linter rejects a floor below
+  the first Android release with built-in data consent.
 - Everything else from 0013 holds: the package submitted is the one the build job tested, every submission
   carries a `git archive` of the tag, and the key lives in a job of its own that runs only `web-ext`.
 

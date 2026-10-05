@@ -3,7 +3,7 @@
 ## Requirements
 
 Node.js **≥ 24** (declared in `package.json` `engines` and tested in CI), and Chrome or Edge
-**≥ 120** or Firefox **≥ 140**.
+**≥ 120** or Firefox **≥ 142**.
 
 ```bash
 npm install

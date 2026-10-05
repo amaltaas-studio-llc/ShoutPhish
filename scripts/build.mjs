@@ -25,7 +25,7 @@ const cleanOnly = args.has('--clean-only');
 const firefox = args.has('--target=firefox');
 const outdir = path.join(root, firefox ? 'dist-firefox' : 'dist');
 /** The Firefox floor is the first release with built-in data-collection consent; see the manifest. */
-const engine = firefox ? 'firefox140' : 'chrome120';
+const engine = firefox ? 'firefox142' : 'chrome120';
 
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 

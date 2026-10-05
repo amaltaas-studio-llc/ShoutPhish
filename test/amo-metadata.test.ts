@@ -14,6 +14,9 @@ const metadata = JSON.parse(readFileSync(new URL('../docs/amo-metadata.json', im
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
   scripts: Record<string, string>;
 };
+const firefoxManifest = JSON.parse(
+  readFileSync(new URL('../src/manifest.firefox.json', import.meta.url), 'utf8'),
+) as { browser_specific_settings: Record<string, unknown> };
 const license = readFileSync(new URL('../LICENSE', import.meta.url), 'utf8');
 
 describe('the addons.mozilla.org listing', () => {
@@ -30,11 +33,13 @@ describe('the addons.mozilla.org listing', () => {
   });
 
   /**
-   * The manifest's Android minimum only marks the first release with built-in data consent. Gmail's mobile
-   * site is different markup from the desktop view the selectors target, and it is untested, so AMO
-   * would otherwise derive an Android listing from that key and offer an install that does nothing.
+   * Gmail's mobile site is different markup from the desktop view the selectors target, and it is
+   * untested, so an Android listing would offer an install that does nothing. AMO lists a version for
+   * Android whenever the manifest has `gecko_android`, overriding the compatibility submitted here, so
+   * both have to say desktop.
    */
   it('lists desktop Firefox only, with a category for exactly the apps it lists', () => {
+    expect(firefoxManifest.browser_specific_settings).not.toHaveProperty('gecko_android');
     expect(metadata.version.compatibility).toEqual(['firefox']);
     expect(Object.keys(metadata.categories)).toEqual(['firefox']);
     expect(metadata.categories['firefox']).toContain('privacy-security');
