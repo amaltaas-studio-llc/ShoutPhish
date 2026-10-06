@@ -22,7 +22,7 @@
  * there; on an opaque page Chrome writes the 24-bit PNG the stores ask for.
  */
 import { spawn } from 'node:child_process';
-import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -161,6 +161,20 @@ ${fit}
 </body></html>`;
 }
 
+const POLICY = path.join(root, 'PRIVACY-POLICY.md');
+
+/**
+ * PRIVACY-POLICY.md as addons.mozilla.org's policy field wants it. The field renders bold, links and lists
+ * but not headings, which would appear as literal `##`, so each becomes a bold line, and the title goes
+ * because the listing supplies its own.
+ */
+function amoPrivacyPolicy(markdown) {
+  return `${markdown
+    .replace(/^# .*\r?\n(\r?\n)?/, '')
+    .replaceAll(/^## (.+)$/gm, '**$1**')
+    .trim()}\n`;
+}
+
 /** The 440x280 tile shown in search results and categories, where only the icon and name are legible. */
 function tileHtml(width, height, scale) {
   return `<!doctype html>
@@ -279,7 +293,8 @@ try {
       written += 2;
     }
   }
-  console.log(`\nWrote ${String(written)} images to store-assets/\n`);
+  await writeFile(path.join(outDir, 'firefox/privacy-policy.md'), amoPrivacyPolicy(await readFile(POLICY, 'utf8')));
+  console.log(`\nWrote ${String(written)} images and firefox/privacy-policy.md to store-assets/\n`);
 } finally {
   await rm(work, { recursive: true, force: true });
 }
