@@ -113,8 +113,8 @@ unrelated to the single purpose, and not used to determine creditworthiness.
 
 ## Distribution tab
 
-Free, all regions. Visibility is a choice: **Unlisted** installs from a link only and suits a first
-release; **Public** appears in search and category pages. It can be changed later.
+Free, all regions, visibility **Public**, so it appears in search and category pages. The first release
+was Unlisted, which installs from a link only, until the listing had its final summary and screenshots.
 
 ## Test instructions tab
 
@@ -151,10 +151,13 @@ Three things have no field `web-ext` can submit. Set them once in the
 [Developer Hub](https://addons.mozilla.org/developers/addons) under **Edit Product Page** after the first
 listed version is submitted, before Mozilla's reviewer reaches it:
 
-- **Privacy policy:** paste the text of [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md). AMO hosts the text
-  itself rather than linking to it, so it has to be pasted again whenever that file changes. AMO keeps
-  every line break, which is why that file has one line per paragraph and absolute links, unlike the rest
-  of the repository's Markdown.
+- **Privacy policy:** paste `store-assets/firefox/privacy-policy.md`, which `npm run store:images` writes
+  from [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md). AMO hosts the text itself rather than linking to it,
+  so it has to be pasted again whenever that file changes. The field renders
+  [a subset of Markdown](https://extensionworkshop.com/documentation/develop/create-an-appealing-listing/#make-use-of-markdown)
+  that has no headings, so the copy turns them into bold lines. It also keeps every line break, which is
+  why the source file has one line per paragraph and absolute links, unlike the rest of the repository's
+  Markdown.
 - **Screenshots:** `store-assets/firefox/1-explained.png` … `5-consent.png`, in that order, with the
   slide titles as captions. The same slides as the Chrome listing, at the 2400×1800 AMO recommends.
 - **Support site:** `https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose`.
