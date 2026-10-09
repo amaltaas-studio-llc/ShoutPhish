@@ -151,13 +151,13 @@ Three things have no field `web-ext` can submit. Set them once in the
 [Developer Hub](https://addons.mozilla.org/developers/addons) under **Edit Product Page** after the first
 listed version is submitted, before Mozilla's reviewer reaches it:
 
-- **Privacy policy:** paste `store-assets/firefox/privacy-policy.md`, which `npm run store:images` writes
-  from [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md). AMO hosts the text itself rather than linking to it,
-  so it has to be pasted again whenever that file changes. The field renders
+- **Privacy policy:** paste the raw text of [`PRIVACY-POLICY.md`](../PRIVACY-POLICY.md) as it is. AMO
+  hosts the text itself rather than linking to it, so it has to be pasted again whenever that file
+  changes. The field renders
   [a subset of Markdown](https://extensionworkshop.com/documentation/develop/create-an-appealing-listing/#make-use-of-markdown)
-  that has no headings, so the copy turns them into bold lines. It also keeps every line break, which is
-  why the source file has one line per paragraph and absolute links, unlike the rest of the repository's
-  Markdown.
+  with no headings and keeps every line break, which is why that file uses bold lines for sections, one
+  line per paragraph, and absolute links, unlike the rest of the repository's Markdown. A test holds it
+  to that.
 - **Screenshots:** `store-assets/firefox/1-explained.png` … `5-consent.png`, in that order, with the
   slide titles as captions. The same slides as the Chrome listing, at the 2400×1800 AMO recommends.
 - **Support site:** `https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose`.
