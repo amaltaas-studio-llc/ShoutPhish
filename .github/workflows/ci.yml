@@ -129,3 +129,22 @@ jobs:
           name: browser-smoke-${{ github.sha }}
           path: smoke-output/
           if-no-files-found: warn
+
+  # The one check the main-branch ruleset requires. The matrix jobs carry the Node version in their names,
+  # so requiring them directly would leave the ruleset waiting for a check that no longer exists the next
+  # time the floor moves. `always()` because a job skipped after a failed dependency counts as passing
+  # to a required check; anything short of success here fails.
+  passed:
+    name: CI passed
+    needs: [verify, package, browsers]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            [ "$result" = success ] || exit 1
+          done
