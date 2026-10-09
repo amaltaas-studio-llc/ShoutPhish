@@ -1,10 +1,10 @@
-# ShoutPhish privacy policy
+**ShoutPhish privacy policy**
 
 Effective 1 October 2026. ShoutPhish is published by Amaltaas Studio LLC ("we").
 
 ShoutPhish is a browser extension that checks the email you open in Gmail for signs of phishing and explains what it found. This policy says what it reads, where that goes, and what it keeps. The technical detail behind every statement here is in [docs/PRIVACY.md](https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/docs/PRIVACY.md), and the source code is public in [the ShoutPhish repository](https://github.com/amaltaas-studio-llc/ShoutPhish), so each of them can be checked.
 
-## What ShoutPhish reads
+**What ShoutPhish reads**
 
 Nothing, until you agree. When ShoutPhish is installed it opens a page that explains what it reads, and it reads nothing in Gmail until you click **Start checking my mail** on that page. You can stop it at any time with the switch at the top of its Settings page.
 
@@ -12,7 +12,7 @@ Once you have agreed, when you open a message in Gmail, ShoutPhish reads what Gm
 
 It never opens a link, downloads an attachment, loads an image, or fetches anything named in a message.
 
-## Where it is analysed
+**Where it is analysed**
 
 On your computer, inside your browser. Every check runs in the Gmail tab. **By default, ShoutPhish sends nothing to anyone**: it makes no network requests, has no server, and has no account, analytics, advertising or tracking of any kind. We never receive your mail or anything about it.
 
@@ -21,30 +21,30 @@ Two optional features, both off until you turn them on:
 - **Chrome's built-in AI.** The message text is given to the model built into Chrome, which runs on your computer. It is not sent anywhere by ShoutPhish.
 - **Your own AI server.** If you enter the address of a model server you run (for example Ollama on your own machine), ShoutPhish sends that server the sender's display name, the subject and an excerpt of the message text, and nothing else. It goes only to the address you entered, and only after you click **Connect** and your browser asks you to allow that address. We do not operate or have access to that server; whoever runs it is responsible for what it does with the data.
 
-## What it keeps
+**What it keeps**
 
 Results stay in the tab's memory and are gone when you close it. The only things saved are your settings and the list of senders you choose to trust. Your browser stores them, and if you use your browser's own sync, it copies them to your other signed-in browsers; we never receive them. Both are shown on the settings page, where you can change or delete them. No message text, subject, score or history of what you read is ever saved.
 
-## Diagnostic reports
+**Diagnostic reports**
 
 The toolbar menu can copy a diagnostic report for you to paste into a bug report yourself. It contains the names of the checks that ran and counts, never text, addresses or links from a message. Nothing is sent unless you paste it somewhere.
 
-## Sharing and sale
+**Sharing and sale**
 
 We do not collect your data, so there is nothing for us to share or sell. ShoutPhish does not transfer user data to anyone except the model server you configure yourself, as described above, and never for advertising, profiling or creditworthiness.
 
-## Chrome Web Store User Data Policy
+**Chrome Web Store User Data Policy**
 
 The use of information received through ShoutPhish adheres to the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/policies), including the Limited Use requirements. Message content is used only to show you the risk of the message in front of you; no person reads it, and it is not used or transferred for any other purpose.
 
-## Children
+**Children**
 
 ShoutPhish is a general-purpose tool and does not knowingly collect information from anyone, including children.
 
-## Changes
+**Changes**
 
 If what ShoutPhish reads, keeps or sends ever changes, this policy will be updated before the release that changes it, and the change will be described in that release's notes. The history of this file is public in the repository.
 
-## Contact
+**Contact**
 
 Questions about this policy: [open an issue](https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose). Privacy or security problems you would rather not discuss in public: [report privately](https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/SECURITY.md).

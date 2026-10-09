@@ -62,6 +62,19 @@ describe('the addons.mozilla.org listing', () => {
     expect(notes).not.toMatch(/^#/m);
   });
 
+  /**
+   * PRIVACY-POLICY.md is pasted into the listing verbatim. AMO's Markdown has no headings, keeps every
+   * line break, and resolves a relative link against addons.mozilla.org, so any of those would show as a
+   * literal `##`, a sentence broken mid-line, or a link to nowhere.
+   */
+  it('keeps the privacy policy pasteable into the listing as it is', () => {
+    const policy = readFileSync(new URL('../PRIVACY-POLICY.md', import.meta.url), 'utf8');
+    expect(policy).not.toMatch(/^#/m);
+    for (const [, target] of policy.matchAll(/\]\(([^)]*)\)/g)) expect(target).toMatch(/^https:\/\//);
+    const paragraphs = policy.split(/\r?\n\s*\r?\n/).map((block) => block.trim());
+    for (const paragraph of paragraphs) expect(paragraph).not.toMatch(/[^\n]\r?\n(?![-*] )/);
+  });
+
   it('tells reviewers a build command that exists', () => {
     expect(metadata.version.approval_notes).toContain('npm run build:firefox');
     expect(pkg.scripts).toHaveProperty('build:firefox');
