@@ -176,6 +176,10 @@ The codebase holds a high standard here, and matching it is part of the task.
   `docs/DETECTION.md` for a rule's scope, an ADR for a rejected alternative, a fixture for an example.
   A message is read once, in a log; those are read every time the code is.
 - Do not commit `dist/`, `harness/.build/`, or anything in `.gitignore`.
+- **Never commit to `main` directly.** Work on a branch and merge it through a pull request, squashed, so
+  CI has passed on the change before it lands and each change is one commit that reverts cleanly. A
+  release is the same: the version bump goes through a pull request, and the tag goes on the merged
+  commit on `main`, since the release workflow builds whatever the tag points at.
 - Do not push, tag, or open a pull request unless asked.
 
 ## Things that are deliberate, not oversights
