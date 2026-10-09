@@ -63,14 +63,20 @@ describe('the addons.mozilla.org listing', () => {
   });
 
   /**
-   * PRIVACY-POLICY.md is pasted into the listing verbatim. AMO's Markdown has no headings, keeps every
-   * line break, and resolves a relative link against addons.mozilla.org, so any of those would show as a
-   * literal `##`, a sentence broken mid-line, or a link to nowhere.
+   * PRIVACY-POLICY.md is pasted into the listing verbatim. AMO's Markdown has no headings and keeps every
+   * line break, so either would show as a literal `##` or a sentence broken mid-line. Its policy page also
+   * takes each link's address from the link's text, so a link whose text is not its own absolute URL goes
+   * to a page under addons.mozilla.org that does not exist.
    */
   it('keeps the privacy policy pasteable into the listing as it is', () => {
     const policy = readFileSync(new URL('../PRIVACY-POLICY.md', import.meta.url), 'utf8');
     expect(policy).not.toMatch(/^#/m);
-    for (const [, target] of policy.matchAll(/\]\(([^)]*)\)/g)) expect(target).toMatch(/^https:\/\//);
+    const links = [...policy.matchAll(/\[([^\]]*)\]\(([^)]*)\)/g)];
+    expect(links.length).toBeGreaterThan(0);
+    for (const [, text, target] of links) {
+      expect(target).toMatch(/^https:\/\//);
+      expect(text).toBe(target);
+    }
     const paragraphs = policy.split(/\r?\n\s*\r?\n/).map((block) => block.trim());
     for (const paragraph of paragraphs) expect(paragraph).not.toMatch(/[^\n]\r?\n(?![-*] )/);
   });

@@ -2,7 +2,7 @@
 
 Effective 1 October 2026. ShoutPhish is published by Amaltaas Studio LLC ("we").
 
-ShoutPhish is a browser extension that checks the email you open in Gmail for signs of phishing and explains what it found. This policy says what it reads, where that goes, and what it keeps. The technical detail behind every statement here is in [docs/PRIVACY.md](https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/docs/PRIVACY.md), and the source code is public in [the ShoutPhish repository](https://github.com/amaltaas-studio-llc/ShoutPhish), so each of them can be checked.
+ShoutPhish is a browser extension that checks the email you open in Gmail for signs of phishing and explains what it found. This policy says what it reads, where that goes, and what it keeps. The technical detail behind every statement here is at [https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/docs/PRIVACY.md](https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/docs/PRIVACY.md), and the source code is public at [https://github.com/amaltaas-studio-llc/ShoutPhish](https://github.com/amaltaas-studio-llc/ShoutPhish), so each of them can be checked.
 
 **What ShoutPhish reads**
 
@@ -33,9 +33,11 @@ The toolbar menu can copy a diagnostic report for you to paste into a bug report
 
 We do not collect your data, so there is nothing for us to share or sell. ShoutPhish does not transfer user data to anyone except the model server you configure yourself, as described above, and never for advertising, profiling or creditworthiness.
 
-**Chrome Web Store User Data Policy**
+**Browser store policies**
 
-The use of information received through ShoutPhish adheres to the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/policies), including the Limited Use requirements. Message content is used only to show you the risk of the message in front of you; no person reads it, and it is not used or transferred for any other purpose.
+The use of information received through ShoutPhish adheres to the Chrome Web Store User Data Policy ([https://developer.chrome.com/docs/webstore/program-policies/policies](https://developer.chrome.com/docs/webstore/program-policies/policies)), including the Limited Use requirements. Message content is used only to show you the risk of the message in front of you; no person reads it, and it is not used or transferred for any other purpose.
+
+In Firefox, ShoutPhish follows Mozilla's Add-on Policies ([https://extensionworkshop.com/documentation/publish/add-on-policies/](https://extensionworkshop.com/documentation/publish/add-on-policies/)) and uses Firefox's own data-sharing consent. It tells Firefox that it collects nothing by default, and Firefox asks for your permission to share message content before ShoutPhish can send anything to an AI server you set up.
 
 **Children**
 
@@ -47,4 +49,4 @@ If what ShoutPhish reads, keeps or sends ever changes, this policy will be updat
 
 **Contact**
 
-Questions about this policy: [open an issue](https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose). Privacy or security problems you would rather not discuss in public: [report privately](https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/SECURITY.md).
+Questions about this policy: open an issue at [https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose](https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose). Privacy or security problems you would rather not discuss in public: report them privately as described at [https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/SECURITY.md](https://github.com/amaltaas-studio-llc/ShoutPhish/blob/main/SECURITY.md).
