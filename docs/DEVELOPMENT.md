@@ -303,9 +303,19 @@ Every job checks out with `persist-credentials: false`, because `npm ci` runs de
 scripts and nothing after the checkout needs to act as this repository. Third-party actions are pinned to a
 commit SHA with the version in a trailing comment, since a tag can be moved to different code after review.
 
+A final `CI passed` job succeeds only when every other job did, and is the one check the main-branch ruleset
+requires (see [below](#branch-and-tag-protection)).
+
 Dependabot (`.github/dependabot.yml`) proposes weekly updates, grouped into one pull request per ecosystem
 so the noise stays proportionate to a dev-only dependency tree. That includes the action pins: it rewrites
 the SHA and the version comment together.
+
+GitHub's CodeQL code scanning runs on every push to `main`, every pull request and weekly, over the
+JavaScript and TypeScript and the workflows themselves, which matters because the release workflow holds
+the addons.mozilla.org key. It uses GitHub's default setup, configured in the repository settings rather
+than a workflow file, so nothing in this tree shows it is on; this paragraph is the record. Results are
+under Security, then Code scanning. A false positive is dismissed there with a comment saying why, not
+silenced in the code.
 
 ## Releasing
 
@@ -350,21 +360,21 @@ and a tag that no longer describes what they have is a worse outcome than a skip
 ## Branch and tag protection
 
 Configured as repository rulesets, which live on GitHub rather than in this repository, hence recorded here.
-Both apply to every account including the owner, since a rule that the person most likely to be typing at
-2am can bypass is documentation, not protection.
 
-| Target                | Rule                            | Reason                                                                              |
-| --------------------- | ------------------------------- | ----------------------------------------------------------------------------------- |
-| `main`                | No force-push, no deletion      | History is the audit trail for a security tool; losing it silently is unrecoverable. |
-| `refs/tags/v*`        | No deletion, no moving          | A release asset is public and permanent, so its tag has to be too.                   |
+| Ruleset        | Target         | Rule                                                        | Bypass                 | Reason                                                                                                    |
+| -------------- | -------------- | ----------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `main`         | `main`         | No force-push, no deletion                                  | Nobody                 | History is the audit trail for a security tool; losing it silently is unrecoverable.                      |
+| `release tags` | `refs/tags/v*` | No deletion, no moving                                      | Nobody                 | A release asset is public and permanent, so its tag has to be too.                                        |
+| `Protect main` | `main`         | Squash-merged pull request, `CI passed`, no new CodeQL alert | Repository admins only | CI has passed on a change before it lands, and each change is one commit that reverts cleanly.            |
 
-Status checks are deliberately **not** required. A commit cannot have passing checks before it is pushed, so
-requiring them would block direct pushes to `main` and force every change through a pull request: friction
-that buys little on a single-maintainer repository, given `npm run verify` runs before every commit anyway.
+The first two bind every account including the owner, since a rule the person most likely to be typing at
+2am can bypass is documentation, not protection. The third lets an admin bypass it, so an outage in CI or in
+GitHub's runners cannot stop an urgent fix; using that is an emergency measure, not a shortcut.
 
-If that changes, do not require the matrix jobs by name: they are called `Verify (Node 24.0.0)` and
-`Verify (Node 26)`, so the floor is baked into the string, and the ruleset would silently demand a check that
-no longer runs the next time the floor moves. Add an aggregate job with a stable name and require that.
+The required check is `CI passed`, never the matrix jobs by name: those are called `Verify (Node 24.0.0)`
+and `Verify (Node 26)`, so the floor is baked into the string, and the ruleset would wait forever for a
+check that no longer runs the next time the floor moves. The CodeQL rule blocks a merge on a new security
+alert of high severity or above, or on an error-level alert of any other kind.
 
 ## Conventions
 
