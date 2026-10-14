@@ -10,7 +10,7 @@
 <img alt="No network requests in the default configuration" src="https://img.shields.io/badge/uploads-none%20by%20default-3b1f8c?style=for-the-badge">
 <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-blue?style=for-the-badge"></a>
 
-### Spot the signs of phishing in Gmail, with reasons you can check for yourself.
+### Know when an email in Gmail is a scam, and see exactly why.
 
 [**Install**](#install-in-two-minutes) · [How it works](#how-it-works) · [What the badge means](#what-the-badge-means) ·
 [Privacy](#your-mail-stays-yours) · [Settings](#make-it-yours) · [Questions](#questions)
@@ -19,8 +19,10 @@
 
 <br>
 
-ShoutPhish is a free, open-source extension for Chrome, Edge and Firefox that puts a risk score beside the sender of every email
-you open in Gmail. Click it and ShoutPhish shows you **what looks unusual, why it matters, and the exact
+ShoutPhish is a free, open-source extension for Chrome, Edge and Firefox that warns you when an email you
+open in Gmail looks like a scam, also called phishing: a fake message from a bank, a delivery company or
+your own IT team, written to get your password, a code or a payment. A badge beside the sender shows the
+risk. Click it and ShoutPhish shows you **what looks unusual, why it matters, and the exact
 evidence**, down to the letter in an address that does not belong. It runs on your computer, needs no
 account, and sends your mail nowhere.
 

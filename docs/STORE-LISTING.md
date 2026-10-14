@@ -14,7 +14,11 @@ The same zip and most of this text also serve Microsoft's
 Upload `shoutphish-VERSION.zip` from the [GitHub release](https://github.com/amaltaas-studio-llc/ShoutPhish/releases),
 never a local build: the release zip is the one CI verified, and its source is the tagged commit. The
 manifest's `name`, `description` and `version` become the listing's title, summary and version, so none
-is typed in the dashboard. The description is `package.json`'s, which the build copies into the manifest;
+is typed in the dashboard. The `name` carries a plain descriptor after the brand, because in search
+results the name and icon are all a stranger sees, and "ShoutPhish" alone says nothing to someone who
+does not know the word phishing. The browser's extension menus show the full name too; `short_name`
+keeps the bare brand where space is short, and the toolbar tooltip and the card say "ShoutPhish" in
+code. The description is `package.json`'s, which the build copies into the manifest;
 changing the summary therefore takes a new version, and `check:dist` holds it to the store's 132
 characters.
 
@@ -23,9 +27,11 @@ characters.
 **Description** (plain text; the store does not render Markdown):
 
 ```text
-ShoutPhish checks the email you open in Gmail for signs of phishing, scores it from 0 to 100, and explains every point of that score in plain words, with the evidence so you can check it yourself.
+ShoutPhish warns you when an email you open in Gmail looks like a scam: a fake message from a bank, a delivery company or your own IT team, written to get your password, a code or a payment. Scams like these are also called phishing.
 
-WHAT IT NOTICES
+A badge appears beside the sender, from Low Risk to High Risk. Click it, and ShoutPhish explains in plain words what looked wrong, with the evidence so you can check it yourself. Each message gets a risk score from 0 to 100, and every point of it is explained.
+
+WHAT IT LOOKS FOR
 • Sender names that claim a company the address does not belong to, and addresses one letter away from a real one
 • Links whose text says one thing while the destination is somewhere else
 • A reply in a conversation from a lookalike of someone already in it
@@ -61,7 +67,7 @@ back for review:
 | Dashboard field | File |
 | --- | --- |
 | Store icon (128×128) | `dist/icons/icon128.png` |
-| Screenshots (1280×800, up to 5, in this order) | `store-assets/chrome/1-explained.png` … `5-consent.png` |
+| Screenshots (1280×800, up to 5, in this order) | `store-assets/chrome/1-scam.png` … `5-consent.png` |
 | Small promo tile (440×280) | `store-assets/chrome/tile-small.png` |
 | Marquee promo tile (1400×560, optional) | `store-assets/chrome/tile-marquee.png` |
 
@@ -138,7 +144,7 @@ what is read, and nothing in Gmail is read before the click
 ## addons.mozilla.org
 
 Nothing is uploaded by hand. The release workflow submits each version on the listed channel together with
-[`amo-metadata.json`](amo-metadata.json): summary, description, category, homepage, licence, desktop-only
+[`amo-metadata.json`](amo-metadata.json): name, summary, description, category, homepage, licence, desktop-only
 compatibility and the notes for Mozilla's reviewers ([ADR 0015](adr/0015-firefox-listed-on-amo.md)). Edit
 the listing there, not in the Developer Hub, because the next release sends the file again and replaces
 what was typed. Its description is the Chrome one above without Chrome's built-in AI, which Firefox does
@@ -158,7 +164,7 @@ listed version is submitted, before Mozilla's reviewer reaches it:
   with no headings and keeps every line break, which is why that file uses bold lines for sections, one
   line per paragraph, and absolute links, unlike the rest of the repository's Markdown. A test holds it
   to that.
-- **Screenshots:** `store-assets/firefox/1-explained.png` … `5-consent.png`, in that order, with the
+- **Screenshots:** `store-assets/firefox/1-scam.png` … `5-consent.png`, in that order, with the
   slide titles as captions. The same slides as the Chrome listing, at the 2400×1800 AMO recommends.
 - **Support site:** `https://github.com/amaltaas-studio-llc/ShoutPhish/issues/new/choose`.
 - **Icon:** `dist-firefox/icons/icon128.png`. AMO does not take the listing icon from the package, so
