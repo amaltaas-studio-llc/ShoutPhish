@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
  */
 const metadata = JSON.parse(readFileSync(new URL('../docs/amo-metadata.json', import.meta.url), 'utf8')) as {
   categories: Record<string, string[]>;
+  name: Record<string, string>;
   summary: Record<string, string>;
   description: Record<string, string>;
   version: { license: string; compatibility: string[]; approval_notes: string };
@@ -20,9 +21,24 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 const firefoxManifest = JSON.parse(
   readFileSync(new URL('../src/manifest.firefox.json', import.meta.url), 'utf8'),
 ) as { browser_specific_settings: Record<string, unknown> };
+const manifest = JSON.parse(readFileSync(new URL('../src/manifest.json', import.meta.url), 'utf8')) as {
+  name: string;
+  short_name: string;
+};
 const license = readFileSync(new URL('../LICENSE', import.meta.url), 'utf8');
 
 describe('the addons.mozilla.org listing', () => {
+  /**
+   * Each store shows a name of its own: the Chrome Web Store reads the manifest, addons.mozilla.org this
+   * file. They are one product, so they say the same thing, within the 50 characters AMO accepts. The
+   * descriptor is for a stranger in search results; `short_name` keeps the bare brand where space is short.
+   */
+  it('names the add-on as the manifest does', () => {
+    expect(metadata.name['en-US']).toBe(manifest.name);
+    expect(manifest.name.length).toBeLessThanOrEqual(50);
+    expect(manifest.name.startsWith(`${manifest.short_name}: `)).toBe(true);
+  });
+
   it('has a summary within the 250 characters AMO accepts', () => {
     const summary = metadata.summary['en-US'] ?? '';
     expect(summary.length).toBeGreaterThan(0);

@@ -14,8 +14,8 @@
  *
  * Only invented organisations appear. The README's screenshots use a Microsoft lookalike because that is
  * the most recognisable case; on a store listing, a famous brand in the images reads as a claim of
- * association, which the impersonation policy forbids. `fixtures=` narrows the multi-message views to
- * the house `northwind-*` names and the other invented senders.
+ * association, which the impersonation policy forbids, so every slide uses a fixture whose sender is one
+ * of the house `northwind-*` names.
  *
  * Output is not committed: the images are regenerated from the harness whenever the UI changes, exactly
  * like docs/assets/, and uploaded by hand. Same capture method as `screenshots.mjs`, for the reasons given
@@ -31,45 +31,41 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'store-assets');
 const base = process.env['SHOUTPHISH_HARNESS_URL'] ?? 'http://127.0.0.1:5199';
 
-/** Invented senders across every band, so `view=badges` finds one of each without a real brand. */
-const INVENTED_BANDS = [
-  'legitimate',
-  'echoed-form-lure',
-  'fake-attachment-link',
-  'anchor-mismatch',
-  'mfa-code-request',
-  'thread-hijack-lookalike',
-  'payroll-change',
-];
-
+/**
+ * The order is the argument a stranger needs: what it does (warns about scams), how (it explains), that it
+ * stays out of the way, one thing it catches, and what it reads. A listing that opens on the explanation
+ * answers "how" before anyone has asked "what", which is what someone outside the field reported.
+ */
 const SLIDES = [
+  // The reader view rather than the card alone, so the first image shows where the warning appears.
   {
-    name: '1-explained.png',
-    title: 'Every point of the score, explained',
-    body: 'ShoutPhish checks the open message in Gmail and shows what it noticed, in plain words, with the evidence to check it yourself.',
+    name: '1-scam.png',
+    title: 'Know when an email is a scam',
+    body: 'ShoutPhish puts a badge beside the sender in Gmail. This fake sign-in alert, from an address made to look like your own company, is marked High Risk.',
+    query: { fixture: 'mfa-code-request', semantic: 'ready', view: 'full' },
+    // Enlarged, because the badge is the subject of the slide and at listing-thumbnail size it is small.
+    frame: { width: 540, height: 420, zoom: 1.25 },
+  },
+  {
+    name: '2-why.png',
+    title: 'See exactly why',
+    body: 'Click the badge for the reasons in plain words, with the evidence from the email so you can check it yourself.',
     query: { fixture: 'mfa-code-request', semantic: 'ready', view: 'card' },
     frame: { width: 404, height: 700 },
   },
   {
-    name: '2-quiet.png',
+    name: '3-quiet.png',
     title: 'Quiet on ordinary mail',
     body: 'Genuine messages stay Low Risk. The badge can stay hidden until something is worth a look.',
     query: { fixture: 'legitimate', semantic: 'ready', view: 'card' },
     frame: { width: 404, height: 700 },
   },
-  {
-    name: '3-badge.png',
-    title: 'A badge beside the sender',
-    body: 'Four levels from Low Risk to High Risk, and an honest "Not checked" when a message could not be read.',
-    query: { view: 'badges', semantic: 'ready', fixtures: INVENTED_BANDS.join(',') },
-    frame: { width: 760, height: 330 },
-  },
   // Not the inbox list: its markers fire on a sender claiming a brand it does not own, which needs a real
   // brand to show, so an invented inbox would display the feature doing nothing.
   {
-    name: '4-thread.png',
-    title: 'Spots a lookalike in the conversation',
-    body: 'A reply from an address one letter away from someone already in the thread is called out. In light or dark mode, like Gmail.',
+    name: '4-lookalike.png',
+    title: 'Catches lookalike senders',
+    body: 'A reply from an address one letter away from someone already in the conversation is called out. In light or dark mode, like Gmail.',
     query: { fixture: 'thread-hijack-lookalike', semantic: 'ready', view: 'card' },
     frame: { width: 404, height: 700 },
     dark: true,
@@ -118,7 +114,8 @@ function slideHtml(slide, store) {
   const { width, height } = slide.frame;
   const stacked = store.stackWide && width > SIDE_BY_SIDE_MAX_FRAME;
   const src = slide.page === undefined ? harnessUrl(slide.query) : pathToFileURL(slide.page.file).href;
-  const content = `<iframe src="${escape(src)}" width="${width}" height="${height}"></iframe>`;
+  const zoom = slide.frame.zoom === undefined ? '' : ` style="zoom: ${String(slide.frame.zoom)}"`;
+  const content = `<iframe src="${escape(src)}" width="${width}" height="${height}"${zoom}></iframe>`;
   // An anchor would put the section flush against the frame's top edge and cut whatever follows it, so
   // the frame is fitted to the section once it has laid out. Both are file:// pages, which Chrome treats
   // as one origin under --allow-file-access-from-files.
@@ -172,7 +169,7 @@ function tileHtml(width, height, scale) {
   .tag { font-size: ${16 * scale}px; color: #e0e7ff; margin-top: ${6 * scale}px; max-width: ${230 * scale}px; line-height: 1.35; }
 </style></head><body>
   <img src="${escape(pathToFileURL(path.join(root, 'assets/icons/icon128.png')).href)}" alt="">
-  <div><div class="name">ShoutPhish</div><div class="tag">Phishing checks for Gmail, with reasons you can verify.</div></div>
+  <div><div class="name">ShoutPhish</div><div class="tag">Warns you about scam emails in Gmail, and shows you why.</div></div>
 </body></html>`;
 }
 

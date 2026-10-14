@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "ShoutPhish",
+  "name": "ShoutPhish: Scam Email Checker for Gmail",
+  "short_name": "ShoutPhish",
   "version": "0.14.0",
-  "description": "Phishing checks for Gmail that explain every point of the score. Runs in your browser, with no network requests by default.",
+  "description": "Warns you when an email in Gmail looks like a scam, and shows why in plain words. By default, your mail never leaves your browser.",
   "minimum_chrome_version": "120",
   "icons": {
     "16": "icons/icon16.png",
