@@ -1,6 +1,6 @@
 {
   "name": "shoutphish",
-  "version": "0.16.3",
+  "version": "0.17.0",
   "private": true,
   "description": "Warns you when an email in Gmail looks like a scam, and shows why in plain words. By default, your mail never leaves your browser.",
   "license": "MIT",
